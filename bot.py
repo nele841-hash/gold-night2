@@ -142,9 +142,9 @@ async def banka(ctx):
     )
 
     # 💰 NOVČANIK / BANKA / PRLJAV
-    embed.add_field(name="<:4115blackmoneybag:1497117936312123474> Novčanik", value=f"```{cash:,}$```", inline=True)
+    embed.add_field(name="<:11998cashbagwhite:1497120094843699270> Novčanik", value=f"```{cash:,}$```", inline=True)
     embed.add_field(name="<:328827nubankcard:1497118079388483644> Banka", value=f"```{bank_money:,}$```", inline=True)
-    embed.add_field(name="🕵️ Prljav novac", value=f"```{dirty:,}$```", inline=True)
+    embed.add_field(name="<:4115blackmoneybag:1497117936312123474> Prljav novac", value=f"```{dirty:,}$```", inline=True)
 
     # 📦 INVENTORY
     items = user.get("inventory", [])
