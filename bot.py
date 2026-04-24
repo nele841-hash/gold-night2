@@ -869,19 +869,19 @@ async def shop(ctx):
     )
 
     embed.add_field(
-        name="🔫 Pištolj",
+        name=f"{EMOJIS['pistol']} Pištolj",
         value=f"`{shop_items['pistol']:,}$`",
         inline=False
     )
 
     embed.add_field(
-        name="🔪 Nož",
+        name=f"{EMOJIS['knife']} Nož",
         value=f"`{shop_items['knife']:,}$`",
         inline=False
     )
 
     embed.add_field(
-        name="🛡️ Zaštita",
+        name=f"{EMOJIS['zastita']} Zaštita",
         value=f"`{shop_items['zastita']:,}$`",
         inline=False
     )
