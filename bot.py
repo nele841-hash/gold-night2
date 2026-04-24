@@ -1254,7 +1254,7 @@ async def top10(ctx):
 # ---------------- RESET SVE (FULL WIPE) ----------------
 @bot.command()
 async def rr(ctx):
-    OWNER_ID = 633262690139242507
+    OWNER_ID = 910227902166102068
 
     if ctx.author.id != OWNER_ID:
         return await ctx.reply("❌ Nemaš dozvolu!", mention_author=False)
