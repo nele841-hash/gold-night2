@@ -752,7 +752,7 @@ async def rulet(ctx, choice: str, amount: int):
 
     # 🎰 START
     embed = discord.Embed(
-        title="🎰 RULET SE VRTI...",
+        title="RULET SE VRTI...",
         description="⏳ Molimo sačekaj 10 sekundi...",
         color=discord.Color.orange()
     )
@@ -810,7 +810,7 @@ async def rulet(ctx, choice: str, amount: int):
     result_text = f"```{number} {color_map[color]}```"
 
     embed = discord.Embed(
-        title="🎰 RULET REZULTAT",
+        title=" RULET REZULTAT",
         description=result_text,
         color=discord.Color.green() if win > 0 else discord.Color.red()
     )
