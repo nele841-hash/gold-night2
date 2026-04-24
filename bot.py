@@ -5,6 +5,12 @@ import random
 import os
 from pymongo import MongoClient
 
+EMOJIS = {
+    "pistol": "<:1136_gun:1497137080919130112>",
+    "knife": "<:1575knifescream:1497137058467024937>",
+    "zastita": "<:714625rolemodyellow:1497137037474660372>"
+}
+
 intents = discord.Intents.default()
 intents.message_content = True
 
