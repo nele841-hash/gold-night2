@@ -726,39 +726,35 @@ async def slot(ctx, amount: int):
     await ctx.reply(embed=embed, mention_author=False)
 
 #-----------------RULET---------------
-
 import asyncio
 import random
 
 @bot.command()
 async def rulet(ctx, choice: str, amount: int):
-    user_id = str(ctx.author.id)
+    user = str(ctx.author.id)
 
-    user = users.find_one({"_id": user_id})
-
-    if not user:
+    if user not in registered_users:
         return await ctx.reply("❌ Moraš prvo otvoriti račun sa `!prijava`", mention_author=False)
+
+    ensure_user(user)
 
     if amount < 1:
         return await ctx.reply("❌ Minimalan ulog je 1$", mention_author=False)
 
-    cash = user.get("cash", 0)
-
-    if cash < amount:
+    if cash_data[user] < amount:
         return await ctx.reply("❌ Nemaš dovoljno novca!", mention_author=False)
 
-    # 🎰 START
+    # 🎰 loading
     embed = discord.Embed(
         title="🎰 RULET SE VRTI...",
-        description="⏳ Sačekaj 10 sekundi...",
+        description="⏳ Molimo sačekaj 10 sekundi...",
         color=discord.Color.orange()
     )
 
     msg = await ctx.reply(embed=embed)
-
     await asyncio.sleep(10)
 
-    # 🎲 BROJ
+    # 🎲 broj
     number = random.randint(0, 36)
 
     red_numbers = {1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36}
@@ -780,32 +776,29 @@ async def rulet(ctx, choice: str, amount: int):
     choice = choice.lower()
     win = 0
 
-    # 🎯 BROJ (x25)
+    # 🎯 BROJ (25x)
     if choice.isdigit():
         if int(choice) == number:
             win = amount * 25
+            cash_data[user] += win
         else:
-            win = -amount
+            cash_data[user] -= amount
 
     # 🎨 BOJA
     else:
         if choice == color:
             if color == "green":
-                win = amount * 36   # 🟢 green
+                win = amount * 36
             else:
-                win = amount * 2    # 🔴 / ⚫️
+                win = amount * 2
+
+            cash_data[user] += win
         else:
-            win = -amount
+            cash_data[user] -= amount
 
-    # 💰 UPDATE CASH
-    new_cash = cash + win
+    save_data()
 
-    users.update_one(
-        {"_id": user_id},
-        {"$set": {"cash": new_cash}}
-    )
-
-    # 🎯 REZULTAT
+    # 🎯 rezultat
     result_text = f"```{number} {color_map[color]}```"
 
     embed = discord.Embed(
@@ -817,9 +810,9 @@ async def rulet(ctx, choice: str, amount: int):
     if win > 0:
         embed.add_field(name="Dobitak", value=f"```+{win:,}$```", inline=False)
     else:
-        embed.add_field(name="Gubitak", value=f"```{win:,}$```", inline=False)
+        embed.add_field(name="Gubitak", value=f"```-{amount:,}$```", inline=False)
 
-    embed.add_field(name="Stanje", value=f"```{new_cash:,}$```", inline=False)
+    embed.add_field(name="Stanje", value=f"```{cash_data[user]:,}$```", inline=False)
 
     await msg.edit(embed=embed)
 #-------------HELP-----------------
