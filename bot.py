@@ -26,9 +26,9 @@ users = db["users"]
 
 # ---------------- SHOP ITEMS ----------------
 shop_items = {
-    "pistol": 15000,
-    "knife": 5000,
-    "zastita": 20000
+    "pistol": 5000,
+    "knife": 1000,
+    "zastita": 10000
 }
 
 # ---------------- USER INIT ----------------
@@ -98,8 +98,8 @@ async def prijava(ctx):
 
     users.insert_one({
         "_id": user_id,
-        "cash": 100,
-        "bank": 0,
+        "cash": 0,
+        "bank": 10000,
         "dirty": 0,
         "inventory": [],
         "business": None,
@@ -107,7 +107,7 @@ async def prijava(ctx):
     })
 
     await ctx.reply(f"✅ {ctx.author.mention} tvoj račun je uspješno kreiran!", mention_author=False)
-
+#---------radi-------------------------
 @bot.command()
 async def radi(ctx):
     user_id = str(ctx.author.id)
@@ -119,7 +119,6 @@ async def radi(ctx):
 
     now = int(time.time())
 
-    # cooldown iz baze (ako ne postoji = 0)
     last_work = user.get("work_cd", 0)
 
     if now - last_work < 3600:
@@ -135,7 +134,8 @@ async def radi(ctx):
 
         return await ctx.reply(embed=embed, mention_author=False)
 
-    earnings = random.randint(500, 1500)
+    
+    earnings = random.randint(200, 600)
 
     users.update_one(
         {"_id": user_id},
@@ -152,11 +152,19 @@ async def radi(ctx):
         color=discord.Color.blue()
     )
 
-    embed.add_field(name="💰 Zarada", value=f"```{earnings}$```", inline=False)
-    embed.add_field(name="💵 Novo stanje", value=f"```{updated_user['cash']}$```", inline=False)
+    embed.add_field(
+        name="💰 Zarada",
+        value=f"```{earnings:,}".replace(",", ".") + "€```",
+        inline=False
+    )
+
+    embed.add_field(
+        name="💵 Novo stanje",
+        value=f"```{updated_user['cash']:,}".replace(",", ".") + "€```",
+        inline=False
+    )
 
     await ctx.reply(embed=embed, mention_author=False)
-
 # ---------------- BANKA ----------------
 @bot.command()
 async def banka(ctx):
@@ -184,19 +192,19 @@ async def banka(ctx):
 
     embed.add_field(
         name="<:11998cashbagwhite:1497120094843699270> Novčanik",
-        value=f"```{cash:,}$```",
+        value=f"```{cash:,}".replace(",", ".") + "€```",
         inline=True
     )
 
     embed.add_field(
         name="<:328827nubankcard:1497118079388483644> Banka",
-        value=f"```{bank_money:,}$```",
+        value=f"```{bank_money:,}".replace(",", ".") + "€```",
         inline=True
     )
 
     embed.add_field(
         name="<:4115blackmoneybag:1497117936312123474> Prljav novac",
-        value=f"```{dirty:,}$```",
+        value=f"```{dirty:,}".replace(",", ".") + "€```",
         inline=True
     )
 
@@ -259,19 +267,23 @@ async def prebaci(ctx, amount: int):
         return await ctx.reply("❌ Moraš prvo otvoriti račun sa `!prijava`", mention_author=False)
 
     if amount < 1:
-        return await ctx.reply("❌ Minimalan iznos je 1$", mention_author=False)
+        return await ctx.reply("❌ Minimalan iznos je 1€", mention_author=False)
 
     cash = user.get("cash", 0)
 
     if cash < amount:
         return await ctx.reply("❌ Nemaš dovoljno novca!", mention_author=False)
 
+    # 💣 HARD EKONOMIJA → 5% fee
+    fee = int(amount * 0.05)
+    final_amount = amount - fee
+
     users.update_one(
         {"_id": user_id},
         {
             "$inc": {
                 "cash": -amount,
-                "bank": amount
+                "bank": final_amount
             }
         }
     )
@@ -279,8 +291,24 @@ async def prebaci(ctx, amount: int):
     updated = users.find_one({"_id": user_id})
 
     embed = discord.Embed(title="Transakcija", color=discord.Color.green())
-    embed.add_field(name="💸 Prebačeno", value=f"```{amount}$```", inline=True)
-    embed.add_field(name="🏦 Banka", value=f"```{updated.get('bank', 0)}$```", inline=True)
+
+    embed.add_field(
+        name="💸 Prebačeno",
+        value=f"```{final_amount:,}".replace(",", ".") + "€```",
+        inline=True
+    )
+
+    embed.add_field(
+        name="🏦 Banka",
+        value=f"```{updated.get('bank', 0):,}".replace(",", ".") + "€```",
+        inline=True
+    )
+
+    embed.add_field(
+        name="💼 Naknada",
+        value=f"```-{fee:,}".replace(",", ".") + "€```",
+        inline=False
+    )
 
     await ctx.reply(embed=embed, mention_author=False)
 
@@ -295,19 +323,23 @@ async def podigni(ctx, amount: int):
         return await ctx.reply("❌ Moraš prvo otvoriti račun sa `!prijava`", mention_author=False)
 
     if amount < 1:
-        return await ctx.reply("❌ Minimalan iznos je 1$", mention_author=False)
+        return await ctx.reply("❌ Minimalan iznos je 1€", mention_author=False)
 
     bank = user.get("bank", 0)
 
     if bank < amount:
         return await ctx.reply("❌ Nemaš dovoljno novca u banci!", mention_author=False)
 
+    # 💣 HARD EKONOMIJA → 3% fee
+    fee = int(amount * 0.03)
+    final_amount = amount - fee
+
     users.update_one(
         {"_id": user_id},
         {
             "$inc": {
                 "bank": -amount,
-                "cash": amount
+                "cash": final_amount
             }
         }
     )
@@ -315,8 +347,24 @@ async def podigni(ctx, amount: int):
     updated = users.find_one({"_id": user_id})
 
     embed = discord.Embed(title="Transakcija", color=discord.Color.red())
-    embed.add_field(name="💸 Podignuto", value=f"```{amount}$```", inline=True)
-    embed.add_field(name="💵 Novčanik", value=f"```{updated.get('cash', 0)}$```", inline=True)
+
+    embed.add_field(
+        name="💸 Podignuto",
+        value=f"```{final_amount:,}".replace(",", ".") + "€```",
+        inline=True
+    )
+
+    embed.add_field(
+        name="💵 Novčanik",
+        value=f"```{updated.get('cash', 0):,}".replace(",", ".") + "€```",
+        inline=True
+    )
+
+    embed.add_field(
+        name="💼 Naknada",
+        value=f"```-{fee:,}".replace(",", ".") + "€```",
+        inline=False
+    )
 
     await ctx.reply(embed=embed, mention_author=False)
 # ---------------- CRIME ----------------
@@ -352,34 +400,95 @@ async def crime(ctx):
     if "pistol" not in inventory:
         return await ctx.reply("❌ Treba ti pištolj za crime!", mention_author=False)
 
-    earnings = random.randint(25000, 40000)
+    # 💣 HARD: 50% šansa fail
+    success = random.random() < 0.5
 
+    # uvijek gubi pištolj
     inventory.remove("pistol")
 
-    users.update_one(
-        {"_id": user_id},
-        {
-            "$inc": {"dirty": earnings},
-            "$set": {
-                "inventory": inventory,
-                "crime_cd": now
+    if success:
+        # 💰 manja zarada nego prije
+        earnings = random.randint(8000, 20000)
+
+        users.update_one(
+            {"_id": user_id},
+            {
+                "$inc": {"dirty": earnings},
+                "$set": {
+                    "inventory": inventory,
+                    "crime_cd": now
+                }
             }
-        }
-    )
+        )
 
-    updated = users.find_one({"_id": user_id})
+        updated = users.find_one({"_id": user_id})
 
-    embed = discord.Embed(
-        title="💀 Kriminal uspješan",
-        color=discord.Color.dark_red()
-    )
+        embed = discord.Embed(
+            title="💀 Kriminal uspješan",
+            color=discord.Color.dark_red()
+        )
 
-    embed.add_field(name="🕵️ Prljav novac", value=f"```+{earnings:,}$```", inline=False)
-    embed.add_field(name="🧾 Ukupno", value=f"```{updated.get('dirty', 0):,}$```", inline=False)
-    embed.add_field(name="🔫 Status", value="Izgubio si pištolj", inline=False)
+        embed.add_field(
+            name="🕵️ Prljav novac",
+            value=f"```+{earnings:,}".replace(",", ".") + "€```",
+            inline=False
+        )
+
+        embed.add_field(
+            name="🧾 Ukupno",
+            value=f"```{updated.get('dirty', 0):,}".replace(",", ".") + "€```",
+            inline=False
+        )
+
+        embed.add_field(
+            name="🔫 Status",
+            value="Izgubio si pištolj",
+            inline=False
+        )
+
+    else:
+        # ❌ FAIL → kazna
+        penalty = random.randint(3000, 8000)
+
+        users.update_one(
+            {"_id": user_id},
+            {
+                "$inc": {"cash": -penalty},
+                "$set": {
+                    "inventory": inventory,
+                    "crime_cd": now
+                }
+            }
+        )
+
+        updated = users.find_one({"_id": user_id})
+
+        embed = discord.Embed(
+            title="🚨 Kriminal propao",
+            color=discord.Color.red()
+        )
+
+        embed.add_field(
+            name="Kazna",
+            value=f"```-{penalty:,}".replace(",", ".") + "€```",
+            inline=False
+        )
+
+        embed.add_field(
+            name="💵 Novčanik",
+            value=f"```{updated.get('cash', 0):,}".replace(",", ".") + "€```",
+            inline=False
+        )
+
+        embed.add_field(
+            name="🔫 Status",
+            value="Policija te uhvatila i izgubio si pištolj",
+            inline=False
+        )
 
     await ctx.reply(embed=embed, mention_author=False)
 
+#---------------pranjepara-------------------------------
 @bot.command()
 async def operipare(ctx):
     user_id = str(ctx.author.id)
@@ -394,8 +503,17 @@ async def operipare(ctx):
     if dirty <= 0:
         return await ctx.reply("❌ Nemaš prljavog novca!", mention_author=False)
 
-    tax = int(dirty * 0.10)
+    # 💣 HARD EKONOMIJA → veća taksa + šansa za gubitak
+    tax = int(dirty * 0.25)  # 25% tax
     cleaned = dirty - tax
+
+    # 🎲 20% šansa da izgubiš dio novca
+    lose = random.random() < 0.2
+    lost_amount = 0
+
+    if lose:
+        lost_amount = int(cleaned * 0.30)  # izgubi 30% od ostatka
+        cleaned -= lost_amount
 
     users.update_one(
         {"_id": user_id},
@@ -407,16 +525,37 @@ async def operipare(ctx):
 
     embed = discord.Embed(
         title="PRANJE PARA",
-        color=discord.Color.green()
+        color=discord.Color.green() if not lose else discord.Color.red()
     )
 
-    embed.add_field(name="Prljav novac:", value=f"```{dirty}$```", inline=False)
-    embed.add_field(name="Oprano:", value=f"```{cleaned}$```", inline=False)
-    embed.add_field(name="Taksa (10%):", value=f"```{tax}$```", inline=False)
+    embed.add_field(
+        name="Prljav novac:",
+        value=f"```{dirty:,}".replace(",", ".") + "€```",
+        inline=False
+    )
+
+    embed.add_field(
+        name="Oprano:",
+        value=f"```{cleaned:,}".replace(",", ".") + "€```",
+        inline=False
+    )
+
+    embed.add_field(
+        name="Taksa (25%):",
+        value=f"```{tax:,}".replace(",", ".") + "€```",
+        inline=False
+    )
+
+    if lose:
+        embed.add_field(
+            name="⚠️ Gubitak",
+            value=f"```-{lost_amount:,}".replace(",", ".") + "€```",
+            inline=False
+        )
 
     await ctx.reply(embed=embed, mention_author=False)
 
-
+#-----------------daily--------------------
 @bot.command()
 async def daily(ctx):
     user_id = str(ctx.author.id)
@@ -444,7 +583,14 @@ async def daily(ctx):
 
         return await ctx.reply(embed=embed, mention_author=False)
 
-    reward = random.randint(1000, 5000)
+    # 💣 HARD EKONOMIJA
+    reward = random.randint(300, 1200)
+
+    # 🎲 15% šansa da dobiješ bonus
+    bonus = 0
+    if random.random() < 0.15:
+        bonus = random.randint(500, 1500)
+        reward += bonus
 
     users.update_one(
         {"_id": user_id},
@@ -457,15 +603,32 @@ async def daily(ctx):
     updated = users.find_one({"_id": user_id})
 
     embed = discord.Embed(
-        title="DAILY REWARD",
+        title="DAILY",
         color=discord.Color.green()
     )
 
-    embed.add_field(name="Dobio si:", value=f"```{reward}$```", inline=False)
-    embed.add_field(name="Novo stanje:", value=f"```{updated.get('cash', 0)}$```", inline=False)
+    embed.add_field(
+        name="Dobio si:",
+        value=f"```{reward:,}".replace(",", ".") + "€```",
+        inline=False
+    )
+
+    if bonus > 0:
+        embed.add_field(
+            name="🎁 Bonus",
+            value=f"```+{bonus:,}".replace(",", ".") + "€```",
+            inline=False
+        )
+
+    embed.add_field(
+        name="Novo stanje:",
+        value=f"```{updated.get('cash', 0):,}".replace(",", ".") + "€```",
+        inline=False
+    )
 
     await ctx.reply(embed=embed, mention_author=False)
 
+#-------------------------KREDIT--------------------------
 @bot.command()
 async def kredit(ctx):
     user_id = str(ctx.author.id)
@@ -479,7 +642,7 @@ async def kredit(ctx):
 
     last_credit = user.get("credit_cd", 0)
 
-    # 3 dana cooldown (259200 sekundi)
+    # 3 dana cooldown
     if now - last_credit < 259200:
         left = 259200 - (now - last_credit)
         hours = left // 3600
@@ -492,13 +655,19 @@ async def kredit(ctx):
         )
         return await ctx.reply(embed=embed, mention_author=False)
 
-    amount = 10000
+    # 💣 HARD EKONOMIJA
+    amount = 5000  # manji kredit
+    interest = int(amount * 0.30)  # 30% kamata
+    total_debt = amount + interest
 
     users.update_one(
         {"_id": user_id},
         {
             "$inc": {"cash": amount},
-            "$set": {"credit_cd": now}
+            "$set": {
+                "credit_cd": now,
+                "debt": user.get("debt", 0) + total_debt
+            }
         }
     )
 
@@ -509,11 +678,93 @@ async def kredit(ctx):
         color=discord.Color.green()
     )
 
-    embed.add_field(name="Dobio si:", value=f"```{amount}$```", inline=False)
-    embed.add_field(name="Novo stanje:", value=f"```{updated.get('cash', 0)}$```", inline=False)
+    embed.add_field(
+        name="Dobio si:",
+        value=f"```{amount:,}".replace(",", ".") + "€```",
+        inline=False
+    )
+
+    embed.add_field(
+        name="Kamata (30%)",
+        value=f"```{interest:,}".replace(",", ".") + "€```",
+        inline=False
+    )
+
+    embed.add_field(
+        name="Ukupan dug",
+        value=f"```{updated.get('debt', 0):,}".replace(",", ".") + "€```",
+        inline=False
+    )
+
+    embed.add_field(
+        name="Novo stanje:",
+        value=f"```{updated.get('cash', 0):,}".replace(",", ".") + "€```",
+        inline=False
+    )
 
     await ctx.reply(embed=embed, mention_author=False)
 
+#-------------------vrati dug-------------------------
+@bot.command()
+async def vratidug(ctx, amount: int):
+    user_id = str(ctx.author.id)
+
+    user = users.find_one({"_id": user_id})
+
+    if not user:
+        return await ctx.reply("❌ Moraš prvo otvoriti račun sa `!prijava`", mention_author=False)
+
+    debt = user.get("debt", 0)
+    cash = user.get("cash", 0)
+
+    if debt <= 0:
+        return await ctx.reply("❌ Nemaš nikakav dug!", mention_author=False)
+
+    if amount < 1:
+        return await ctx.reply("❌ Minimalan iznos je 1€", mention_author=False)
+
+    if cash < amount:
+        return await ctx.reply("❌ Nemaš dovoljno novca u novčaniku!", mention_author=False)
+
+    if amount > debt:
+        amount = debt  # ne možeš platiti više nego što duguješ
+
+    users.update_one(
+        {"_id": user_id},
+        {
+            "$inc": {
+                "cash": -amount,
+                "debt": -amount
+            }
+        }
+    )
+
+    updated = users.find_one({"_id": user_id})
+
+    embed = discord.Embed(
+        title="💳 Otplata duga",
+        color=discord.Color.green()
+    )
+
+    embed.add_field(
+        name="Plaćeno",
+        value=f"```{amount:,}".replace(",", ".") + "€```",
+        inline=False
+    )
+
+    embed.add_field(
+        name="Preostali dug",
+        value=f"```{updated.get('debt', 0):,}".replace(",", ".") + "€```",
+        inline=False
+    )
+
+    embed.add_field(
+        name="Novčanik",
+        value=f"```{updated.get('cash', 0):,}".replace(",", ".") + "€```",
+        inline=False
+    )
+
+    await ctx.reply(embed=embed, mention_author=False)
 #-------------PLJACKAJ-------------
 @bot.command()
 async def pljackaj(ctx, member: discord.Member):
@@ -524,31 +775,30 @@ async def pljackaj(ctx, member: discord.Member):
     target = users.find_one({"_id": target_id})
 
     if not user:
-        return await ctx.reply("❌ Moraš prvo otvoriti račun sa `!prijava`", mention_author=False)
+        return ctx.reply("❌ Moraš prvo otvoriti račun sa `!prijava`", mention_author=False)
 
     if not target:
-        return await ctx.reply("❌ Taj korisnik nema račun!", mention_author=False)
+        return ctx.reply("❌ Taj korisnik nema račun!", mention_author=False)
 
     if user_id == target_id:
-        return await ctx.reply("❌ Ne možeš sebe opljačkati!", mention_author=False)
+        return ctx.reply("❌ Ne možeš sebe opljačkati!", mention_author=False)
 
     now = int(time.time())
 
     if now - user.get("rob_cd", 0) < 600:
         left = 600 - (now - user.get("rob_cd", 0))
-        return await ctx.reply(f"⏳ Čekaj još {left//60}m {left%60}s", mention_author=False)
+        return ctx.reply(f"⏳ Čekaj još {left//60}m {left%60}s", mention_author=False)
 
     attacker_inv = user.get("inventory", [])
     target_inv = target.get("inventory", [])
 
-    # ❌ mora imati nož
     if "knife" not in attacker_inv:
-        return await ctx.reply("❌ Treba ti nož za pljačku!", mention_author=False)
+        return ctx.reply("❌ Treba ti nož za pljačku!", mention_author=False)
 
-    # 🔪 UVIJEK izgubi nož
+    # 🔪 uvijek gubi nož
     attacker_inv.remove("knife")
 
-    # 🛡️ ZAŠTITA
+    # 🛡️ zaštita
     if "zastita" in target_inv:
         target_inv.remove("zastita")
 
@@ -568,88 +818,65 @@ async def pljackaj(ctx, member: discord.Member):
         )
 
         embed.add_field(
-            name="Rezultat",
-            value=(
-                f"PLJAČKAŠ\n```{ctx.author}```\n"
-                f"ŽRTVA\n```{member}```\n"
-                f"ISHOD\n```Zaštita je blokirala pljačku```"
-            ),
-            inline=False
-        )
-
-        return await ctx.reply(embed=embed, mention_author=False)
-
-    success = random.randint(1, 100) <= 60
-    target_cash = target.get("cash", 0)
-
-    if target_cash <= 0:
-        users.update_one(
-            {"_id": user_id},
-            {"$set": {"inventory": attacker_inv, "rob_cd": now}}
-        )
-
-        return await ctx.reply("❌ Nema para! Izgubio si nož.", mention_author=False)
-
-    # ✔️ USPJEH
-    if success:
-        stolen = int(target_cash * 0.30)
-
-        users.update_one(
-            {"_id": target_id},
-            {"$inc": {"cash": -stolen}}
-        )
-
-        users.update_one(
-            {"_id": user_id},
-            {
-                "$inc": {"cash": stolen},
-                "$set": {"inventory": attacker_inv, "rob_cd": now}
-            }
-        )
-
-        embed = discord.Embed(
-            title="💰 PLJAČKA USPJEŠNA",
-            color=discord.Color.green()
+            name="PLJAČKAŠ",
+            value=f"```{ctx.author}```",
+            inline=True
         )
 
         embed.add_field(
-            name="Rezultat",
-            value=(
-                f"PLJAČKAŠ\n```{ctx.author}```\n"
-                f"ŽRTVA\n```{member}```\n"
-                f"UKRADENO\n```{stolen:,}$```"
-            ),
-            inline=False
-        )
-
-    # ❌ FAIL
-    else:
-        fine = random.randint(1000, 3000)
-
-        users.update_one(
-            {"_id": user_id},
-            {
-                "$inc": {"cash": -fine},
-                "$set": {"inventory": attacker_inv, "rob_cd": now}
-            }
-        )
-
-        embed = discord.Embed(
-            title="💀 PLJAČKA NEUSPJEŠNA",
-            color=discord.Color.red()
+            name="ŽRTVA",
+            value=f"```{member}```",
+            inline=True
         )
 
         embed.add_field(
-            name="Rezultat",
-            value=(
-                f"PLJAČKAŠ\n```{ctx.author}```\n"
-                f"ŽRTVA\n```{member}```\n"
-                f"KAZNA\n```{fine:,}$```"
-            ),
+            name="ISHOD",
+            value="```Zaštita je blokirala pljačku```",
             inline=False
         )
 
-    await ctx.reply(embed=embed, mention_author=False)
+        return ctx.reply(embed=embed, mention_author=False)
+
+    # 💰 UVIJEK USPJEH (NO FAIL)
+    stolen = int(target.get("cash", 0) * 0.25)
+
+    users.update_one(
+        {"_id": target_id},
+        {"$inc": {"cash": -stolen}}
+    )
+
+    users.update_one(
+        {"_id": user_id},
+        {
+            "$inc": {"cash": stolen},
+            "$set": {"inventory": attacker_inv, "rob_cd": now}
+        }
+    )
+
+    embed = discord.Embed(
+        title="💰 PLJAČKA USPJEŠNA",
+        color=discord.Color.green()
+    )
+
+    embed.add_field(
+        name="PLJAČKAŠ",
+        value=f"```{ctx.author}```",
+        inline=True
+    )
+
+    embed.add_field(
+        name="ŽRTVA",
+        value=f"```{member}```",
+        inline=True
+    )
+
+    embed.add_field(
+        name="UKRADENO",
+        value=f"```{stolen:,}".replace(",", ".") + "€```",
+        inline=False
+    )
+
+    ctx.reply(embed=embed, mention_author=False)
 #-----------------SET-----------------------
 @bot.command()
 async def set(ctx, member: discord.Member, amount: int):
@@ -691,14 +918,37 @@ async def slot(ctx, amount: int):
         return await ctx.reply("❌ Moraš prvo otvoriti račun sa `!prijava`", mention_author=False)
 
     if amount < 1:
-        return await ctx.reply("❌ Minimalan ulog je 1$", mention_author=False)
+        return await ctx.reply("❌ Minimalan ulog je 1€", mention_author=False)
 
     cash = user.get("cash", 0)
 
     if cash < amount:
         return await ctx.reply("❌ Nemaš dovoljno novca!", mention_author=False)
 
+    # 🚫 anti-spam cooldown
+    now = int(time.time())
+    last_slot = user.get("slot_cd", 0)
+
+    if now - last_slot < 5:
+        return await ctx.reply("⏳ Sačekaj malo prije ponovnog igranja slotova!", mention_author=False)
+
+    users.update_one(
+        {"_id": user_id},
+        {"$set": {"slot_cd": now}}
+    )
+
     symbols = ["🍒", "🍋", "🍇", "💎", "7️⃣"]
+
+    # 🎰 START MESSAGE
+    embed = discord.Embed(
+        title="🎰 SLOT",
+        description="⏳ Sačekajte 3 sekunde...",
+        color=discord.Color.orange()
+    )
+
+    msg = await ctx.reply(embed=embed)
+
+    await asyncio.sleep(3)
 
     r1 = random.choice(symbols)
     r2 = random.choice(symbols)
@@ -708,12 +958,10 @@ async def slot(ctx, amount: int):
 
     win = 0
 
-    # 🎰 WIN / LOSS LOGIKA
+    # 💣 WIN LOGIKA
     if r1 == r2 == r3:
         if r1 == "💎":
             win = amount * 7
-        elif r1 == "7️⃣":
-            win = amount * 4
         else:
             win = amount * 2
 
@@ -722,21 +970,9 @@ async def slot(ctx, amount: int):
             {"$inc": {"cash": win}}
         )
 
-        title = "Dobitak"
+        title = "🎉 Dobitak"
         color = discord.Color.green()
-        change_text = f"+{win:,}$"
-
-    elif r1 == r2 or r1 == r3 or r2 == r3:
-        win = int(amount * 1.5)
-
-        users.update_one(
-            {"_id": user_id},
-            {"$inc": {"cash": win}}
-        )
-
-        title = "Dobitak"
-        color = discord.Color.gold()
-        change_text = f"+{win:,}$"
+        change_text = f"+{win:,}".replace(",", ".") + "€"
 
     else:
         users.update_one(
@@ -744,9 +980,9 @@ async def slot(ctx, amount: int):
             {"$inc": {"cash": -amount}}
         )
 
-        title = "Gubitak"
+        title = "💀 Gubitak"
         color = discord.Color.red()
-        change_text = f"-{amount:,}$"
+        change_text = f"-{amount:,}".replace(",", ".") + "€"
 
     updated = users.find_one({"_id": user_id})
 
@@ -755,28 +991,38 @@ async def slot(ctx, amount: int):
         color=color
     )
 
-    embed.add_field(name="🎲 Rezultat", value=f"```{result}```", inline=False)
-    embed.add_field(name="💸 Dob/Gub", value=f"```{change_text}```", inline=False)
-    embed.add_field(name="💰 Stanje", value=f"```{updated.get('cash', 0):,}$```", inline=False)
+    embed.add_field(
+        name="🎰 Slot",
+        value=f"```{result}```",
+        inline=False
+    )
 
-    await ctx.reply(embed=embed, mention_author=False)
+    embed.add_field(
+        name="💸 Promjena",
+        value=f"```{change_text}```",
+        inline=False
+    )
 
+    embed.add_field(
+        name="💰 Stanje",
+        value=f"```{updated.get('cash', 0):,}".replace(",", ".") + "€```",
+        inline=False
+    )
+
+    await msg.edit(embed=embed)
 #-----------------RULET---------------
 import asyncio
 import random
+import time
 
 @bot.command()
 async def rulet(ctx, choice: str, amount: int):
     user_id = str(ctx.author.id)
 
-    # 🟢 MONGO CHECK (UMJESTO registered_users)
     user = users.find_one({"_id": user_id})
 
     if not user:
-        return await ctx.reply(
-            "❌ Moraš prvo otvoriti račun sa `!prijava`",
-            mention_author=False
-        )
+        return await ctx.reply("❌ Moraš prvo otvoriti račun sa `!prijava`", mention_author=False)
 
     if amount < 1:
         return await ctx.reply("❌ Minimalan ulog je 1$", mention_author=False)
@@ -786,16 +1032,28 @@ async def rulet(ctx, choice: str, amount: int):
     if cash < amount:
         return await ctx.reply("❌ Nemaš dovoljno novca!", mention_author=False)
 
+    # 🚫 anti-spam cooldown
+    now = int(time.time())
+    last = user.get("rulet_cd", 0)
+
+    if now - last < 5:
+        return await ctx.reply("⏳ Sačekaj malo prije ponovnog ruleta!", mention_author=False)
+
+    users.update_one(
+        {"_id": user_id},
+        {"$set": {"rulet_cd": now}}
+    )
+
     # 🎰 START
     embed = discord.Embed(
-        title="RULET SE VRTI...",
-        description="⏳ Molimo sačekaj 10 sekundi...",
+        title="🎰 RULET SE VRTI...",
+        description="⏳ Sačekajte 5 sekundi...",
         color=discord.Color.orange()
     )
 
     msg = await ctx.reply(embed=embed)
 
-    await asyncio.sleep(10)
+    await asyncio.sleep(5)
 
     # 🎲 BROJ
     number = random.randint(0, 36)
@@ -819,11 +1077,13 @@ async def rulet(ctx, choice: str, amount: int):
     choice = choice.lower()
     win = 0
 
-    # 🎯 BROJ (25x)
+    # 🎯 BROJ = 25x
     if choice.isdigit():
         if int(choice) == number:
             win = amount * 25
-        cash += win if win else -amount
+        else:
+            win = -amount
+
     else:
         # 🎨 BOJA
         if choice == color:
@@ -831,22 +1091,22 @@ async def rulet(ctx, choice: str, amount: int):
                 win = amount * 36
             else:
                 win = amount * 2
-
-            cash += win
         else:
-            cash -= amount
+            win = -amount
 
-    # 💾 SAVE MONGO
+    # 💾 CASH UPDATE
+    new_cash = cash + win
+
     users.update_one(
         {"_id": user_id},
-        {"$set": {"cash": cash}}
+        {"$set": {"cash": new_cash}}
     )
 
     # 🎯 RESULT
     result_text = f"```{number} {color_map[color]}```"
 
     embed = discord.Embed(
-        title=" RULET REZULTAT",
+        title="🎯 RULET REZULTAT",
         description=result_text,
         color=discord.Color.green() if win > 0 else discord.Color.red()
     )
@@ -854,9 +1114,9 @@ async def rulet(ctx, choice: str, amount: int):
     if win > 0:
         embed.add_field(name="Dobitak", value=f"```+{win:,}$```", inline=False)
     else:
-        embed.add_field(name="Gubitak", value=f"```-{amount:,}$```", inline=False)
+        embed.add_field(name="Gubitak", value=f"```{win:,}$```", inline=False)
 
-    embed.add_field(name="Stanje", value=f"```{cash:,}$```", inline=False)
+    embed.add_field(name="Stanje", value=f"```{new_cash:,}$```", inline=False)
 
     await msg.edit(embed=embed)
 #-------------HELP-----------------
@@ -1028,26 +1288,44 @@ async def biznisi(ctx):
     )
 
     embed.add_field(
-        name="🎰 Kladionica",
-        value="💰 Cijena: `1,000,000$`\n💸 Zarada: `100,000$ / 24h`",
+        name="👑 Diler",
+        value="💰 Cijena: `2.000.000€`\n💸 Zarada: `100.000€ / 24h`",
         inline=False
     )
 
     embed.add_field(
-        name="🥩 Klaonica",
-        value="💰 Cijena: `500,000$`\n💸 Zarada: `75,000$ / 24h`",
+        name="🥩 Klaonica Karić",
+        value="💰 Cijena: `2.000.000€`\n💸 Zarada: `100.000€ / 24h`",
         inline=False
     )
 
     embed.add_field(
         name="🏪 Kiosk",
-        value="💰 Cijena: `200,000$`\n💸 Zarada: `30,000$ / 24h`",
+        value="💰 Cijena: `250.000€`\n💸 Zarada: `35.000€ / 24h`",
+        inline=False
+    )
+
+    embed.add_field(
+        name="🍔 Restoran",
+        value="💰 Cijena: `400.000€`\n💸 Zarada: `60.000€ / 24h`",
+        inline=False
+    )
+
+    embed.add_field(
+        name="🏭 Auto Servis",
+        value="💰 Cijena: `600.000€`\n💸 Zarada: `80.000€ / 24h`",
+        inline=False
+    )
+
+    embed.add_field(
+        name="🚬 Trafika",
+        value="💰 Cijena: `150.000€`\n💸 Zarada: `25.000€ / 24h`",
         inline=False
     )
 
     embed.add_field(
         name="🛒 Kupovina",
-        value="Koristi: `!kupibiz <ime>`\nPrimjer: `!kupibiz kiosk`",
+        value="Koristi: `!kupibiz <ime>`",
         inline=False
     )
 
@@ -1065,21 +1343,34 @@ async def kupibiz(ctx, *, biznis: str):
 
     biznis = biznis.lower().replace(" ", "")
 
-    # 🏢 NOVI BIZNISI
+    # 🏢 BIZNISI + CIJENE
     biz = {
+        "diler": 2000000,
+        "klanicakarić": 2000000,
         "kladionica": 1000000,
         "klaonica": 500000,
         "kiosk": 200000
     }
 
     names = {
+        "diler": "👑 Diler",
+        "klanicakarić": "🥩 Klaonica Karić",
         "kladionica": "🎰 Kladionica",
         "klaonica": "🥩 Klaonica",
         "kiosk": "🏪 Kiosk"
     }
 
+    # 🚫 PROVJERA POSTOJE LI
     if biznis not in biz:
         return await ctx.reply("❌ Taj biznis ne postoji! Koristi !biznisi")
+
+    # 👑 LIMIT 1 BIZNISI
+    unique_biz = ["diler", "klanicakarić"]
+
+    if biznis in unique_biz:
+        existing = users.find_one({"business": biznis})
+        if existing:
+            return await ctx.reply("❌ Ovaj biznis već ima vlasnika!")
 
     user_cash = user.get("cash", 0)
 
@@ -1136,7 +1427,7 @@ async def uzmipare(ctx):
     now = int(time.time())
     last_pay = user.get("business_last_pay", 0)
 
-    # 🕒 COOLDOWN
+    # 🕒 24h cooldown
     if now - last_pay < 86400:
         left = 86400 - (now - last_pay)
         hours = left // 3600
@@ -1144,7 +1435,7 @@ async def uzmipare(ctx):
 
         embed = discord.Embed(
             title="🏢 BIZNIS",
-            description=f"⏳ Sačekaj još **{hours}h {minutes}m** da bi mogao uzeti pare iz biznisa.",
+            description=f"⏳ Sačekaj **{hours}h {minutes}m** za sljedeću isplatu.",
             color=discord.Color.orange()
         )
 
@@ -1152,18 +1443,25 @@ async def uzmipare(ctx):
 
     # 💰 ZARADE
     earnings_map = {
+        "diler": 100000,
+        "klanicakarić": 100000,
         "kladionica": 100000,
         "klaonica": 75000,
         "kiosk": 30000
     }
 
     names = {
+        "diler": "👑 Diler",
+        "klanicakarić": "🥩 Klaonica Karić",
         "kladionica": "🎰 Kladionica",
         "klaonica": "🥩 Klaonica",
         "kiosk": "🏪 Kiosk"
     }
 
     earnings = earnings_map.get(biznis, 0)
+
+    if earnings <= 0:
+        return await ctx.reply("❌ Ovaj biznis nema definisanu zaradu!")
 
     users.update_one(
         {"_id": user_id},
@@ -1218,6 +1516,7 @@ async def pay(ctx, member: discord.Member, amount: int):
     tax = int(amount * 0.10)
     receive_amount = amount - tax
 
+    # 💾 UPDATE
     users.update_one(
         {"_id": sender_id},
         {"$inc": {"cash": -amount}}
@@ -1228,6 +1527,10 @@ async def pay(ctx, member: discord.Member, amount: int):
         {"$inc": {"cash": receive_amount}}
     )
 
+    # 🧼 FORMAT FUNKCIJA (tačka umjesto zareza)
+    def fmt(x):
+        return f"{x:,}".replace(",", ".") + "$"
+
     embed = discord.Embed(
         title="💸 TRANSFER NOVCA",
         color=discord.Color.green()
@@ -1235,9 +1538,9 @@ async def pay(ctx, member: discord.Member, amount: int):
 
     embed.add_field(name="📤 Pošiljaoc", value=f"{ctx.author.mention}", inline=False)
     embed.add_field(name="📥 Primalac", value=f"{member.mention}", inline=False)
-    embed.add_field(name="💰 Poslano", value=f"`{amount:,}$`", inline=False)
-    embed.add_field(name="🏦 Tax (10%)", value=f"`{tax:,}$`", inline=False)
-    embed.add_field(name="💵 Primalac dobija", value=f"`{receive_amount:,}$`", inline=False)
+    embed.add_field(name="💰 Poslano", value=f"`{fmt(amount)}`", inline=False)
+    embed.add_field(name="🏦 Tax (10%)", value=f"`{fmt(tax)}`", inline=False)
+    embed.add_field(name="💵 Primalac dobija", value=f"`{fmt(receive_amount)}`", inline=False)
 
     await ctx.reply(embed=embed)
 
@@ -1245,16 +1548,19 @@ async def pay(ctx, member: discord.Member, amount: int):
 # ---------------- TOP10 ----------------
 @bot.command()
 async def top10(ctx):
-    top_users = users.find().limit(100)  # uzmi više pa sortiraj ručno
+    all_users = users.find()
 
     leaderboard = []
 
-    for u in top_users:
+    def fmt(x):
+        return f"{x:,}".replace(",", ".") + "$"
+
+    for u in all_users:
         user_id = u["_id"]
         cash = u.get("cash", 0)
         bank = u.get("bank", 0)
 
-        total = cash + bank  # 💰 KLJUČNA PROMJENA
+        total = cash + bank
 
         try:
             member = await bot.fetch_user(int(user_id))
@@ -1264,7 +1570,6 @@ async def top10(ctx):
 
         leaderboard.append((name, total))
 
-    # sort po ukupno
     leaderboard.sort(key=lambda x: x[1], reverse=True)
 
     embed = discord.Embed(
@@ -1272,19 +1577,26 @@ async def top10(ctx):
         color=discord.Color.gold()
     )
 
-    text = ""
-
     medals = ["🥇", "🥈", "🥉"]
+
+    text = ""
 
     for i, (name, total) in enumerate(leaderboard[:10], start=1):
         medal = medals[i-1] if i <= 3 else f"#{i}"
-        text += f"{medal} **{name}**\n💰 `{total:,}$`\n\n"
+
+        text += (
+            f"{medal} **{name}**\n"
+            f"💰 `{fmt(total)}`\n"
+            f"・\n"
+        )
 
     embed.add_field(
         name="📊 Rang lista",
         value=text or "❌ Nema podataka",
         inline=False
     )
+
+    embed.set_footer(text="💎 Kazino leaderboard sistem")
 
     await ctx.reply(embed=embed)
 # ---------------- RESET SVE (FULL WIPE) ----------------
@@ -1303,6 +1615,22 @@ async def rr(ctx):
         description="✔️ Svi računi su obrisani!\n🔐 Sada svi moraju ponovo `!prijava`",
         color=discord.Color.red()
     )
+
+    await ctx.reply(embed=embed)
+
+# ---------------- AVATAR ----------------
+@bot.command()
+async def avatar(ctx, member: discord.Member = None):
+    member = member or ctx.author
+
+    embed = discord.Embed(
+        title=f"Profilna slika od {member.name}",
+        color=discord.Color.blue()
+    )
+
+    embed.set_image(url=member.display_avatar.url)
+
+    embed.set_footer(text=f"Traženo od {ctx.author.name}")
 
     await ctx.reply(embed=embed)
 # ---------------- RUN ----------------
