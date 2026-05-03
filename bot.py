@@ -1581,6 +1581,28 @@ async def avatar(ctx, member: discord.Member = None):
     embed.set_footer(text=f"Traženo od {ctx.author.name}")
 
     await ctx.reply(embed=embed)
+
+#-----------------šamar-----------------
+@bot.command()
+async def osamari(ctx, member: discord.Member):
+    gifs = [
+        "https://media.tenor.com/1slap1.gif",
+        "https://media.tenor.com/2slap2.gif",
+        "https://media.tenor.com/3slap3.gif",
+        "https://media.tenor.com/4slap4.gif"
+    ]
+
+    gif = random.choice(gifs)
+
+    embed = discord.Embed(
+        title="💢 ŠAMAR!",
+        description=f"**{ctx.author.name}** je ošamario **{member.name}** 😂",
+        color=discord.Color.red()
+    )
+
+    embed.set_image(url=gif)
+
+    await ctx.reply(embed=embed)
 # ---------------- RUN ----------------
 
 
