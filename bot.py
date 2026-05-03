@@ -185,12 +185,51 @@ async def banka(ctx):
     bank_money = user.get("bank", 0)
     dirty = user.get("dirty", 0)
 
+    embed = discord.Embed(
+        title="VAŠ RAČUN",
+        color=discord.Color.gold()
+    )
+
+    embed.add_field(
+        name="👤 Korisnik",
+        value=f"`{ctx.author.name}`",
+        inline=False
+    )
+
+    embed.add_field(
+        name="💵 Novčanik",
+        value=f"```{format_money(cash)}```",
+        inline=True
+    )
+
+    embed.add_field(
+        name="🏦 Banka",
+        value=f"```{format_money(bank_money)}```",
+        inline=True
+    )
+
+    embed.add_field(
+        name="🕵️ Prljav novac",
+        value=f"```{format_money(dirty)}```",
+        inline=True
+    )
+
+    # 📦 INVENTORY
+    items = user.get("inventory", [])
+
     counts = {"knife": 0, "pistol": 0, "zastita": 0}
 
-    for i in user.get("inventory", []):
+    for i in items:
         if i in counts:
             counts[i] += 1
 
+    inv_text = (
+        f"🔪 Nož: x{counts['knife']}\n"
+        f"🔫 Pištolj: x{counts['pistol']}\n"
+        f"🛡️ Zaštita: x{counts['zastita']}"
+    )
+
+    # 🏢 BIZNIS
     biznis = user.get("business")
 
     biz_names = {
@@ -202,21 +241,19 @@ async def banka(ctx):
         "trafika": "🚬 Trafika"
     }
 
-    embed = discord.Embed(
-        title="VAŠ RAČUN",
-        color=discord.Color.gold()
+    biz_text = f"`{biz_names.get(biznis, 'Nemaš biznis')}`" if biznis else "`Nemaš biznis`"
+
+    # 📊 2 KOLONE (ISTI RED)
+    embed.add_field(
+        name="📦 Inventory",
+        value=inv_text,
+        inline=True
     )
 
-    embed.description = (
-        f"👤 **{ctx.author.name}**\n"
-        f"━━━━━━━━━━━━━━━━━━\n"
-        f"💵 Novčanik: `{format_money(cash)}`\n"
-        f"🏦 Banka: `{format_money(bank_money)}`\n"
-        f"🕵️ Prljav: `{format_money(dirty)}`\n"
-        f"━━━━━━━━━━━━━━━━━━\n"
-        f"📦 Inventory:\n"
-        f"🔪 {counts['knife']}  |  🔫 {counts['pistol']}  |  🛡️ {counts['zastita']}\n"
-        f"🏢 Biznis: `{biz_names.get(biznis, 'Nemaš biznis') if biznis else 'Nemaš biznis'}`"
+    embed.add_field(
+        name="🏢 Biznis",
+        value=biz_text,
+        inline=True
     )
 
     await ctx.reply(embed=embed)
