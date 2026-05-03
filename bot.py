@@ -1582,20 +1582,20 @@ async def avatar(ctx, member: discord.Member = None):
 
     await ctx.reply(embed=embed)
 
-#-----------------šamar-----------------
+#---------------šamar--------------
 @bot.command()
-async def osamari(ctx, member: discord.Member):
+async def ošamari(ctx, member: discord.Member):
     gifs = [
-        "https://media.tenor.com/1slap1.gif",
-        "https://media.tenor.com/2slap2.gif",
-        "https://media.tenor.com/3slap3.gif",
-        "https://media.tenor.com/4slap4.gif"
+        "https://media.tenor.com/wF0Xz7k5vQ0AAAAC/slap-anime.gif",
+        "https://media.tenor.com/0G2bX5x0kqMAAAAC/slap.gif",
+        "https://media.tenor.com/8gqQ9x7dZ7sAAAAC/slap-face.gif",
+        "https://media.tenor.com/3Qw8d5m3s0MAAAAC/anime-slap.gif"
     ]
 
     gif = random.choice(gifs)
 
     embed = discord.Embed(
-        title="💢 ŠAMAR!",
+        title="💢 OŠAMARIO!",
         description=f"**{ctx.author.name}** je ošamario **{member.name}** 😂",
         color=discord.Color.red()
     )
