@@ -1587,9 +1587,9 @@ async def avatar(ctx, member: discord.Member = None):
 async def osamari(ctx, member: discord.Member):
 
     gifs = [
-        "https://media.tenor.com/images/5c1b6f7c2d8a3d7f0f6b1f0a3c8d0a3f/tenor.gif",
-        "https://media.tenor.com/images/2d6b7a9c1f3e4b5a6c7d8e9f0a1b2c3d/tenor.gif",
-        "https://media.tenor.com/images/9f8e7d6c5b4a3210f0e1d2c3b4a5f6e7/tenor.gif"
+        "https://c.tenor.com/wF0Xz7k5vQ0AAAAC/slap-anime.gif",
+        "https://c.tenor.com/0G2bX5x0kqMAAAAC/slap.gif",
+        "https://c.tenor.com/8gqQ9x7dZ7sAAAAC/slap-face.gif"
     ]
 
     gif = random.choice(gifs)
