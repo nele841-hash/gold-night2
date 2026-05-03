@@ -190,12 +190,14 @@ async def banka(ctx):
         color=discord.Color.gold()
     )
 
+    # 👤 USER
     embed.add_field(
         name="👤 Korisnik",
         value=f"`{ctx.author.name}`",
         inline=False
     )
 
+    # 💵 MONEY
     embed.add_field(
         name="💵 Novčanik",
         value=f"```{format_money(cash)}```",
@@ -224,9 +226,9 @@ async def banka(ctx):
             counts[i] += 1
 
     inv_text = (
-        f"🔪: x{counts['knife']}\n"
-        f"🔫: x{counts['pistol']}\n"
-        f"🛡️ : x{counts['zastita']}"
+        f"🔪 Nož: `{counts['knife']}`\n"
+        f"🔫 Pištolj: `{counts['pistol']}`\n"
+        f"🛡️ Zaštita: `{counts['zastita']}`"
     )
 
     # 🏢 BIZNIS
@@ -243,7 +245,7 @@ async def banka(ctx):
 
     biz_text = f"`{biz_names.get(biznis, 'Nemaš biznis')}`" if biznis else "`Nemaš biznis`"
 
-    # 📊 2 KOLONE (ISTI RED)
+    # 📊 ZBIJENO (ALI ČISTO)
     embed.add_field(
         name="📦 Inventory",
         value=inv_text,
@@ -257,62 +259,6 @@ async def banka(ctx):
     )
 
     await ctx.reply(embed=embed)
-# ---------------- PREBACI ----------------
-@bot.command()
-async def prebaci(ctx, amount: int):
-    user_id = str(ctx.author.id)
-
-    user = users.find_one({"_id": user_id})
-
-    if not user:
-        return await ctx.reply("❌ Moraš prvo otvoriti račun sa `!prijava`", mention_author=False)
-
-    if amount < 1:
-        return await ctx.reply("❌ Minimalan iznos je 1€", mention_author=False)
-
-    cash = user.get("cash", 0)
-
-    if cash < amount:
-        return await ctx.reply("❌ Nemaš dovoljno novca!", mention_author=False)
-
-    # 💣 HARD EKONOMIJA → 5% fee
-    fee = int(amount * 0.05)
-    final_amount = amount - fee
-
-    users.update_one(
-        {"_id": user_id},
-        {
-            "$inc": {
-                "cash": -amount,
-                "bank": final_amount
-            }
-        }
-    )
-
-    updated = users.find_one({"_id": user_id})
-
-    embed = discord.Embed(title="Transakcija", color=discord.Color.green())
-
-    embed.add_field(
-        name="💸 Prebačeno",
-        value=f"```{final_amount:,}".replace(",", ".") + "€```",
-        inline=True
-    )
-
-    embed.add_field(
-        name="🏦 Banka",
-        value=f"```{updated.get('bank', 0):,}".replace(",", ".") + "€```",
-        inline=True
-    )
-
-    embed.add_field(
-        name="💼 Naknada",
-        value=f"```-{fee:,}".replace(",", ".") + "€```",
-        inline=False
-    )
-
-    await ctx.reply(embed=embed, mention_author=False)
-
 # ---------------- PODIGNI ----------------
 @bot.command()
 async def podigni(ctx, amount: int):
