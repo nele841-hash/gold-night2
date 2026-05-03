@@ -198,19 +198,19 @@ async def banka(ctx):
 
     embed.add_field(
         name="💵 Novčanik",
-        value=f"`{format_money(cash)}`",
+        value=f"```{format_money(cash)}```",
         inline=True
     )
 
     embed.add_field(
         name="🏦 Banka",
-        value=f"`{format_money(bank_money)}`",
+        value=f"```{format_money(bank_money)}```",
         inline=True
     )
 
     embed.add_field(
         name="🕵️ Prljav novac",
-        value=f"`{format_money(dirty)}`",
+        value=f"```{format_money(dirty)}```",
         inline=True
     )
 
