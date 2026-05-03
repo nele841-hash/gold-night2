@@ -56,36 +56,36 @@ async def on_ready():
 #--------------welcome---------------------
 @bot.event
 async def on_member_join(member):
-    channel_id = 1497114729829634142  # 👈 welcome kanal ID
-    rules_channel_id = 1483475314272112784  # 👈 #pravila ID
-    roles_channel_id = 1483475963684720751  # 👈 #role ID
+    channel_id = 1483475608003678278  # welcome kanal
+    rules_channel_id = 1483475314272112784
+    roles_channel_id = 1483475963684720751
 
     channel = bot.get_channel(channel_id)
-
     if not channel:
         return
 
-    member_count = member.guild.member_count  # 👈 broj članova
+    member_count = member.guild.member_count
 
     embed = discord.Embed(
-        title="✨ Dobrodošao na GOLD NIGHT ✨",
         description=(
-            f"👋 Dobrodošao {member.mention}\n\n"
-            f"📜 Pročitaj pravila u <#{rules_channel_id}>\n"
-            f"🎭 Izaberi role u <#{roles_channel_id}>\n\n"
-            f"📊 Server trenutno broji `{member_count}` članova!"
+            f"**・Dobrodošao {member.mention}**\n\n"
+            f"・Pročitaj pravila u <#{rules_channel_id}>\n"
+            f"・Izaberi role u <#{roles_channel_id}>\n\n"
+            f"**・Server trenutno broji `{member_count}` članova**"
         ),
         color=discord.Color.gold()
+    )
+
+    embed.set_author(
+        name="GOLD NIGHT",
+        icon_url=member.guild.icon.url if member.guild.icon else None
     )
 
     embed.set_thumbnail(
         url=member.avatar.url if member.avatar else member.default_avatar.url
     )
 
-    embed.set_footer(text=f"ID: {member.id}")
-
     await channel.send(embed=embed)
-
 # ---------------- PRIJAVA ----------------
 @bot.command()
 async def prijava(ctx):
