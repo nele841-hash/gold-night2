@@ -56,7 +56,7 @@ async def on_ready():
 #--------------welcome---------------------
 @bot.event
 async def on_member_join(member):
-    channel_id = 123456789012345678  # 👈 welcome kanal ID
+    channel_id = 1497114729829634142  # 👈 welcome kanal ID
     rules_channel_id = 1483475314272112784  # 👈 #pravila ID
     roles_channel_id = 1483475963684720751  # 👈 #role ID
 
