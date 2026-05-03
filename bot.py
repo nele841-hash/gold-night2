@@ -182,7 +182,13 @@ async def banka(ctx):
     bank_money = user.get("bank", 0)
     dirty = user.get("dirty", 0)
 
-    embed = discord.Embed(title="🏦 Vaš račun", color=discord.Color.gold())
+    def fmt(x):
+        return f"{x:,}".replace(",", ".") + "€"
+
+    embed = discord.Embed(
+        title="🏦 VAŠ RAČUN",
+        color=discord.Color.gold()
+    )
 
     embed.add_field(
         name="👤 Korisnik",
@@ -191,20 +197,20 @@ async def banka(ctx):
     )
 
     embed.add_field(
-        name="<:11998cashbagwhite:1497120094843699270> Novčanik",
-        value=f"```{cash:,}".replace(",", ".") + "€```",
+        name="💵 Novčanik",
+        value=f"```{fmt(cash)}```",
         inline=True
     )
 
     embed.add_field(
-        name="<:328827nubankcard:1497118079388483644> Banka",
-        value=f"```{bank_money:,}".replace(",", ".") + "€```",
+        name="🏦 Banka",
+        value=f"```{fmt(bank_money)}```",
         inline=True
     )
 
     embed.add_field(
-        name="<:4115blackmoneybag:1497117936312123474> Prljav novac",
-        value=f"```{dirty:,}".replace(",", ".") + "€```",
+        name="🕵️ Prljav novac",
+        value=f"```{fmt(dirty)}```",
         inline=True
     )
 
@@ -212,25 +218,22 @@ async def banka(ctx):
     items = user.get("inventory", [])
 
     EMOJIS = {
-        "zastita": "<:714625rolemodyellow:1497137037474660372>",
         "pistol": "<:1136_gun:1497137080919130112>",
-        "knife": "<:1575knifescream:1497137058467024937>"
+        "knife": "<:1575knifescream:1497137058467024937>",
+        "zastita": "<:714625rolemodyellow:1497137037474660372>"
     }
 
-    if items:
-        counts = {"knife": 0, "pistol": 0, "zastita": 0}
+    counts = {"knife": 0, "pistol": 0, "zastita": 0}
 
-        for i in items:
-            if i in counts:
-                counts[i] += 1
+    for i in items:
+        if i in counts:
+            counts[i] += 1
 
-        inv_text = (
-            f"{EMOJIS['knife']} x{counts['knife']}\n"
-            f"{EMOJIS['pistol']} x{counts['pistol']}\n"
-            f"{EMOJIS['zastita']} x{counts['zastita']}"
-        )
-    else:
-        inv_text = "`Prazno`"
+    inv_text = (
+        f"{EMOJIS['knife']} Nož: x{counts['knife']}\n"
+        f"{EMOJIS['pistol']} Pištolj: x{counts['pistol']}\n"
+        f"{EMOJIS['zastita']} Zaštita: x{counts['zastita']}"
+    )
 
     embed.add_field(
         name="📦 Inventory",
@@ -238,21 +241,30 @@ async def banka(ctx):
         inline=True
     )
 
-    # 🏢 BIZNIS
-    biznis = user.get("business")
+    # 🏢 BIZNISI (TVOJI)
+    biznisi = user.get("business", [])
+
+    if isinstance(biznisi, str):
+        biznisi = [biznisi]
 
     biz_names = {
-        "kladionica": "🎰 Kladionica",
-        "klaonica": "🥩 Klaonica",
-        "kiosk": "🏪 Kiosk"
+        "diler": "👑 Diler",
+        "klanicakarić": "🥩 Klaonica Karić",
+        "kiosk": "🏪 Kiosk",
+        "restoran": "🍔 Restoran",
+        "autoservis": "🏭 Auto Servis",
+        "trafika": "🚬 Trafika"
     }
 
-    biz_text = biz_names.get(biznis, "Nemaš biznis")
+    if biznisi:
+        biz_text = "\n".join(f"🏢 {biz_names.get(b, b)}" for b in biznisi)
+    else:
+        biz_text = "Nemaš biznis"
 
     embed.add_field(
         name="🏢 Biznis",
-        value=f"`{biz_text}`",
-        inline=True
+        value=biz_text,
+        inline=False
     )
 
     await ctx.reply(embed=embed)
@@ -1343,28 +1355,34 @@ async def kupibiz(ctx, *, biznis: str):
 
     biznis = biznis.lower().replace(" ", "")
 
-    # 🏢 BIZNISI + CIJENE
+    # 🏢 BIZNISI + CIJENE (TVOJI)
     biz = {
         "diler": 2000000,
         "klanicakarić": 2000000,
-        "kladionica": 1000000,
-        "klaonica": 500000,
-        "kiosk": 200000
+        "kiosk": 250000,
+        "restoran": 400000,
+        "autoservis": 600000,
+        "trafika": 150000
     }
 
     names = {
         "diler": "👑 Diler",
         "klanicakarić": "🥩 Klaonica Karić",
-        "kladionica": "🎰 Kladionica",
-        "klaonica": "🥩 Klaonica",
-        "kiosk": "🏪 Kiosk"
+        "kiosk": "🏪 Kiosk",
+        "restoran": "🍔 Restoran",
+        "autoservis": "🏭 Auto Servis",
+        "trafika": "🚬 Trafika"
     }
 
-    # 🚫 PROVJERA POSTOJE LI
     if biznis not in biz:
         return await ctx.reply("❌ Taj biznis ne postoji! Koristi !biznisi")
 
-    # 👑 LIMIT 1 BIZNISI
+    user_cash = user.get("cash", 0)
+
+    if user_cash < biz[biznis]:
+        return await ctx.reply("❌ Nemaš dovoljno novca!")
+
+    # 👑 UNIQUE BIZNISI (SAMO 1 VLASNIK NA SERVERU)
     unique_biz = ["diler", "klanicakarić"]
 
     if biznis in unique_biz:
@@ -1372,14 +1390,11 @@ async def kupibiz(ctx, *, biznis: str):
         if existing:
             return await ctx.reply("❌ Ovaj biznis već ima vlasnika!")
 
-    user_cash = user.get("cash", 0)
-
-    if user_cash < biz[biznis]:
-        return await ctx.reply("❌ Nemaš dovoljno novca!")
-
+    # ❌ već ima biznis
     if user.get("business"):
         return await ctx.reply("❌ Već posjeduješ biznis!")
 
+    # 💰 KUPNJA
     users.update_one(
         {"_id": user_id},
         {
@@ -1397,13 +1412,13 @@ async def kupibiz(ctx, *, biznis: str):
     )
 
     embed.add_field(
-        name="Biznis",
+        name="📌 Biznis",
         value=f"`{names[biznis]}`",
         inline=False
     )
 
     embed.add_field(
-        name="Status",
+        name="💰 Status",
         value="Kupljeno ✔️",
         inline=False
     )
