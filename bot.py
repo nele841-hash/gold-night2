@@ -5,14 +5,17 @@ import random
 import os
 from pymongo import MongoClient
 
+
 EMOJIS = {
     "pistol": "<:1136_gun:1497137080919130112>",
     "knife": "<:1575knifescream:1497137058467024937>",
     "zastita": "<:714625rolemodyellow:1497137037474660372>"
 }
 
+
 intents = discord.Intents.default()
 intents.message_content = True
+intents.members = True  
 
 bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
@@ -49,6 +52,39 @@ def get_user(user_id):
 async def on_ready():
     print(f"✅ Bot je online kao {bot.user}")
     print("🚂 Railway deployment active")
+
+#--------------welcome---------------------
+@bot.event
+async def on_member_join(member):
+    channel_id = 123456789012345678  # 👈 welcome kanal ID
+    rules_channel_id = 1483475314272112784  # 👈 #pravila ID
+    roles_channel_id = 1483475963684720751  # 👈 #role ID
+
+    channel = bot.get_channel(channel_id)
+
+    if not channel:
+        return
+
+    member_count = member.guild.member_count  # 👈 broj članova
+
+    embed = discord.Embed(
+        title="✨ Dobrodošao na GOLD NIGHT ✨",
+        description=(
+            f"👋 Dobrodošao {member.mention}\n\n"
+            f"📜 Pročitaj pravila u <#{rules_channel_id}>\n"
+            f"🎭 Izaberi role u <#{roles_channel_id}>\n\n"
+            f"📊 Server trenutno broji `{member_count}` članova!"
+        ),
+        color=discord.Color.gold()
+    )
+
+    embed.set_thumbnail(
+        url=member.avatar.url if member.avatar else member.default_avatar.url
+    )
+
+    embed.set_footer(text=f"ID: {member.id}")
+
+    await channel.send(embed=embed)
 
 # ---------------- PRIJAVA ----------------
 @bot.command()
