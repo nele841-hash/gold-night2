@@ -1598,6 +1598,21 @@ async def on_command_error(ctx, error):
             "Kazino komande rade samo u <#1500745787716403280>!",
             mention_author=False
         )
+
+#-----------------obavjest--------------
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def obavjestenje(ctx, *, poruka: str):
+
+    embed = discord.Embed(
+        title="📢 OBAVJEŠTENJE",
+        description=poruka,
+        color=discord.Color.red()
+    )
+
+    embed.set_footer(text=f"{ctx.guild.name}")
+
+    await ctx.channel.send(embed=embed)
 # ---------------- RUN ----------------
 
 
