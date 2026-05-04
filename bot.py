@@ -1613,22 +1613,8 @@ async def avatar(ctx, member: discord.Member = None):
 
 #---------------šamar---------------
 @bot.command()
-async def osamari(ctx, member: discord.Member = None):
-
-    if member is None:
-        return await ctx.reply("❌ Moraš nekoga tagovati!", mention_author=False)
-
-    gif = "https://media1.tenor.com/m/wLgfcMfKkpoAAAAC/slap-chappelle-show.gif"
-
-    embed = discord.Embed(
-        title="💢 OŠAMARIO!",
-        description=f"**{ctx.author.name}** je ošamario **{member.name}** 😂",
-        color=discord.Color.red()
-    )
-
-    embed.set_image(url=gif)
-
-    await ctx.send(embed=embed)
+async def testgif(ctx):
+    await ctx.send("https://media1.tenor.com/m/wLgfcMfKkpoAAAAC/slap-chappelle-show.gif")
 
 #-----------------------s---------------
 @bot.event
