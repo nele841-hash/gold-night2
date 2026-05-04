@@ -1618,9 +1618,11 @@ async def osamari(ctx, member: discord.Member = None):
     if member is None:
         return await ctx.reply("❌ Moraš tagovati nekoga!", mention_author=False)
 
+    gif = "https://media1.tenor.com/m/wLgfcMfKkpoAAAAC/slap-chappelle-show.gif"
+
     await ctx.send(
         f"💢 **{ctx.author.name}** je ošamario **{member.name}** 😂\n"
-        "https://media1.tenor.com/m/wLgfcMfKkpoAAAAC/slap-chappelle-show.gif"
+        f"{gif}"
     )
 #-----------------------s---------------
 @bot.event
