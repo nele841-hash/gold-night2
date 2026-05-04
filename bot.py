@@ -1607,7 +1607,7 @@ async def obavjestenje(ctx, *, poruka: str):
     embed = discord.Embed(
         title="📢 OBAVJEŠTENJE",
         description=poruka,
-        color=discord.Color.red()
+        color=discord.Color.gold()
     )
 
     embed.set_footer(text=f"{ctx.guild.name}")
