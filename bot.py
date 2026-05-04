@@ -1620,10 +1620,15 @@ async def osamari(ctx, member: discord.Member = None):
 
     gif = "https://media1.tenor.com/m/wLgfcMfKkpoAAAAC/slap-chappelle-show.gif"
 
-    await ctx.send(
-        f"💢 **{ctx.author.name}** je ošamario **{member.name}** 😂\n"
-        f"{gif}"
+    embed = discord.Embed(
+        title="💢 OŠAMARIO!",
+        description=f"**{ctx.author.name}** je ošamario **{member.name}** 😂",
+        color=discord.Color.red()
     )
+
+    embed.set_image(url=gif)
+
+    await ctx.send(embed=embed)
 #-----------------------s---------------
 @bot.event
 async def on_command_error(ctx, error):
