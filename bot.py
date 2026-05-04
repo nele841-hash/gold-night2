@@ -1618,7 +1618,7 @@ async def osamari(ctx, member: discord.Member = None):
     if member is None:
         return await ctx.reply("❌ Moraš tagovati nekoga!", mention_author=False)
 
-    gif = "https://media1.tenor.com/m/wLgfcMfKkpoAAAAC/slap-chappelle-show.gif"
+    gif = "<div class="tenor-gif-embed" data-postid="3845367485112521003" data-share-method="host" data-aspect-ratio="1" data-width="100%"><a href="https://tenor.com/view/cat-meme-hit-gif-3845367485112521003">Cat Meme Sticker</a>from <a href="https://tenor.com/search/cat-stickers">Cat Stickers</a></div> <script type="text/javascript" async src="https://tenor.com/embed.js"></script>"
 
     embed = discord.Embed(
         title="💢 OŠAMARIO!",
