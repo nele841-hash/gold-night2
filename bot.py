@@ -117,6 +117,7 @@ async def prijava(ctx):
     await ctx.reply(f"✅ {ctx.author.mention} tvoj račun je uspješno kreiran!", mention_author=False)
 #---------radi-------------------------
 @bot.command()
+@kazino_only()
 async def radi(ctx):
     user_id = str(ctx.author.id)
 
@@ -175,6 +176,7 @@ async def radi(ctx):
     await ctx.reply(embed=embed, mention_author=False)
 # ---------------- BANKA ----------------
 @bot.command()
+@kazino_only()
 async def banka(ctx):
     user_id = str(ctx.author.id)
 
@@ -267,6 +269,7 @@ async def banka(ctx):
     await ctx.reply(embed=embed)
 # ---------------- PODIGNI ----------------
 @bot.command()
+@kazino_only()
 async def podigni(ctx, amount: int):
     user_id = str(ctx.author.id)
 
@@ -322,6 +325,7 @@ async def podigni(ctx, amount: int):
     await ctx.reply(embed=embed, mention_author=False)
 # ---------------- CRIME ----------------
 @bot.command()
+@kazino_only()
 async def crime(ctx):
     user_id = str(ctx.author.id)
 
@@ -443,6 +447,7 @@ async def crime(ctx):
 
 #---------------pranjepara-------------------------------
 @bot.command()
+@kazino_only()
 async def operipare(ctx):
     user_id = str(ctx.author.id)
 
@@ -510,6 +515,7 @@ async def operipare(ctx):
 
 #-----------------daily--------------------
 @bot.command()
+@kazino_only()
 async def daily(ctx):
     user_id = str(ctx.author.id)
 
@@ -583,6 +589,7 @@ async def daily(ctx):
 
 #-------------------------KREDIT--------------------------
 @bot.command()
+@kazino_only()
 async def kredit(ctx):
     user_id = str(ctx.author.id)
 
@@ -659,6 +666,7 @@ async def kredit(ctx):
 
 #-------------------vrati dug-------------------------
 @bot.command()
+@kazino_only()
 async def vratidug(ctx, amount: int):
     user_id = str(ctx.author.id)
 
@@ -720,6 +728,7 @@ async def vratidug(ctx, amount: int):
     await ctx.reply(embed=embed, mention_author=False)
 #-------------PLJACKAJ-------------
 @bot.command()
+@kazino_only()
 async def pljackaj(ctx, member: discord.Member):
     user_id = str(ctx.author.id)
     target_id = str(member.id)
@@ -832,6 +841,7 @@ async def pljackaj(ctx, member: discord.Member):
     ctx.reply(embed=embed, mention_author=False)
 #-----------------SET-----------------------
 @bot.command()
+@kazino_only()
 async def set(ctx, member: discord.Member, amount: int):
     OWNER_IDS = [
         1423978463290982470,
@@ -862,6 +872,7 @@ async def set(ctx, member: discord.Member, amount: int):
 
 #-----------------SLOT-------------------
 @bot.command()
+@kazino_only()
 async def slot(ctx, amount: int):
     user_id = str(ctx.author.id)
 
@@ -969,6 +980,7 @@ import random
 import time
 
 @bot.command()
+@kazino_only()
 async def rulet(ctx, choice: str, amount: int):
     user_id = str(ctx.author.id)
 
@@ -1074,6 +1086,7 @@ async def rulet(ctx, choice: str, amount: int):
     await msg.edit(embed=embed)
 #-------------HELP-----------------
 @bot.command()
+@kazino_only()
 async def help(ctx):
     embed = discord.Embed(
         title="💰 CASINO KOMANDE",
@@ -1132,6 +1145,7 @@ async def help(ctx):
     await ctx.reply(embed=embed)
 #----------------SHOP----------------
 @bot.command()
+@kazino_only()
 async def shop(ctx):
     embed = discord.Embed(
         title="🛒 SHOP",
@@ -1162,6 +1176,7 @@ async def shop(ctx):
     await ctx.reply(embed=embed)
 #------------------BUY-----------------
 @bot.command()
+@kazino_only()
 async def kupi(ctx, item: str):
     user_id = str(ctx.author.id)
 
@@ -1234,6 +1249,7 @@ async def kupi(ctx, item: str):
     await ctx.reply(embed=embed)
 # ---------------- BIZNISI ----------------
 @bot.command()
+@kazino_only()
 async def biznisi(ctx):
     embed = discord.Embed(
         title="🏢 DOSTUPNI BIZNISI",
@@ -1286,6 +1302,7 @@ async def biznisi(ctx):
 
 # ---------------- KUPI BIZNIS ----------------
 @bot.command()
+@kazino_only()
 async def kupibiz(ctx, *, biznis: str):
     user_id = str(ctx.author.id)
 
@@ -1367,6 +1384,7 @@ async def kupibiz(ctx, *, biznis: str):
     await ctx.reply(embed=embed)
 # ---------------- UZMI PARE ----------------
 @bot.command()
+@kazino_only()
 async def uzmipare(ctx):
     user_id = str(ctx.author.id)
 
@@ -1447,6 +1465,7 @@ async def uzmipare(ctx):
     await ctx.reply(embed=embed)
 # ---------------- PAY ----------------
 @bot.command()
+@kazino_only()
 async def pay(ctx, member: discord.Member, amount: int):
     sender_id = str(ctx.author.id)
     receiver_id = str(member.id)
@@ -1503,6 +1522,7 @@ async def pay(ctx, member: discord.Member, amount: int):
 
 # ---------------- TOP10 ----------------
 @bot.command()
+@kazino_only()
 async def top10(ctx):
     all_users = users.find()
 
@@ -1557,6 +1577,7 @@ async def top10(ctx):
     await ctx.reply(embed=embed)
 # ---------------- RESET SVE (FULL WIPE) ----------------
 @bot.command()
+@kazino_only()
 async def rr(ctx):
     OWNER_ID = 910227902166102068
 
