@@ -1611,6 +1611,15 @@ async def osamari(ctx, member: discord.Member):
     embed.set_image(url=gif)
 
     await ctx.reply(embed=embed)
+
+#-----------------------s---------------
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CheckFailure):
+        await ctx.reply(
+            "Kazino komande rade samo u <#1500745787716403280>!",
+            mention_author=False
+        )
 # ---------------- RUN ----------------
 
 
