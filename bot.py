@@ -1110,7 +1110,7 @@ async def help(ctx):
             "**!uzmipare** - `uzmi pare iz biznisa\n`"
             "**!vratidug <iznos>** - `vrati dug\n`"
             "`!top10` - leaderboard"
-            "`!radi` - **da odradiš posao**
+            "`!radi` - **da odradiš posao**"
         ),
         inline=False
     )
