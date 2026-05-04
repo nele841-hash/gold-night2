@@ -207,19 +207,19 @@ async def banka(ctx):
     )
 
     embed.add_field(
-        name="💵 Novčanik",
+        name="<:11998cashbagwhite:1497120094843699270> Novčanik",
         value=f"```{format_money(cash)}```",
         inline=True
     )
 
     embed.add_field(
-        name="🏦 Banka",
+        name="<:328827nubankcard:1497118079388483644> Banka",
         value=f"```{format_money(bank_money)}```",
         inline=True
     )
 
     embed.add_field(
-        name="🕵️ Prljav novac",
+        name="<:4115blackmoneybag:1497117936312123474> Prljav novac",
         value=f"```{format_money(dirty)}```",
         inline=True
     )
@@ -1611,24 +1611,6 @@ async def avatar(ctx, member: discord.Member = None):
 
     await ctx.reply(embed=embed)
 
-#---------------šamar---------------
-@bot.command()
-async def osamari(ctx, member: discord.Member = None):
-
-    if member is None:
-        return await ctx.reply("❌ Moraš tagovati nekoga!", mention_author=False)
-
-    gif = "<div class="tenor-gif-embed" data-postid="3845367485112521003" data-share-method="host" data-aspect-ratio="1" data-width="100%"><a href="https://tenor.com/view/cat-meme-hit-gif-3845367485112521003">Cat Meme Sticker</a>from <a href="https://tenor.com/search/cat-stickers">Cat Stickers</a></div> <script type="text/javascript" async src="https://tenor.com/embed.js"></script>"
-
-    embed = discord.Embed(
-        title="💢 OŠAMARIO!",
-        description=f"**{ctx.author.name}** je ošamario **{member.name}** 😂",
-        color=discord.Color.red()
-    )
-
-    embed.set_image(url=gif)
-
-    await ctx.send(embed=embed)
 #-----------------------s---------------
 @bot.event
 async def on_command_error(ctx, error):
