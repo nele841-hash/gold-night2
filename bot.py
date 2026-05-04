@@ -1084,8 +1084,9 @@ async def rulet(ctx, choice: str, amount: int):
     embed.add_field(name="Stanje", value=f"```{new_cash:,}$```", inline=False)
 
     await msg.edit(embed=embed)
-@bot.command()
 
+#---------------help-------------------
+@bot.command()
 async def help(ctx):
 
     embed = discord.Embed(
@@ -1096,21 +1097,21 @@ async def help(ctx):
     embed.add_field(
         name="",
         value=(
-            "**!prijava** - `otvara račun\n`"
-            "**!banka** - `stanje novca i inventory\n`"
-            "**!pay @user <iznos>** - `pošalji novac\n`"
-            "**!daily** - `dnevna nagrada\n`"
-            "**!pljackaj @user** - `pljačka igrača\n`"
-            "**!crime** - `kriminal (treba pištolj)\n`"
-            "**!operipare** - `pranje prljavog novca\n`"
-            "**!slot <iznos>** - `slot mašina\n`"
-            "**!rulet <boja/broj> <iznos>** - `rulet\n"
-            "**!biznisi** - `lista biznisa\n`"
-            "**!kupibiz <ime>** - `kupi biznis\n`"
-            "**!uzmipare** - `uzmi pare iz biznisa\n`"
-            "**!vratidug <iznos>** - `vrati dug\n`"
-            "`!top10` - leaderboard"
-            "`!radi` - **da odradiš posao**"
+            "`!prijava` - **Da otvoriš račun**\n"
+            "`!banka` - **Stanje novca i inventory**\n"
+            "`!pay @user <iznos>` - **Da pošalješ novac igraču**\n"
+            "`!daily` - **Dnevna nagrada**\n"
+            "`!pljackaj @user` - **Pljačka igrača**\n"
+            "`!crime` - **Kriminal (treba pištolj)**\n"
+            "`!operipare` - **Pranje prljavog novca**\n"
+            "`!slot <iznos>` - **Slot mašina**\n"
+            "`!rulet <boja/broj> <iznos>` - **Rulet igra**\n"
+            "`!biznisi` - **Lista biznisa**\n"
+            "`!kupibiz <ime>` - **Kupi biznis**\n"
+            "`!uzmipare` - **Uzmi pare iz biznisa**\n"
+            "`!vratidug <iznos>` - **Vrati dug**\n"
+            "`!top10` - **Leaderboard**\n"
+            "`!radi` - **Da odradiš posao**"
         ),
         inline=False
     )
