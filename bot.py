@@ -1084,61 +1084,34 @@ async def rulet(ctx, choice: str, amount: int):
     embed.add_field(name="Stanje", value=f"```{new_cash:,}$```", inline=False)
 
     await msg.edit(embed=embed)
-#-------------HELP-----------------
 @bot.command()
 @kazino_only()
 async def help(ctx):
+
     embed = discord.Embed(
-        title="💰 CASINO KOMANDE",
-        description="Lista svih dostupnih komandi",
+        title="💰 **KAZINO KOMANDE**",
         color=discord.Color.blurple()
     )
 
     embed.add_field(
-        name="💼 Osnovne komande",
+        name="",
         value=(
-            "`!prijava` - otvara račun\n"
-            "`!banka` - vidi stanje novca i inventory\n"
-            "`!pay @user <iznos>` - šalje novac igraču\n"
-            "`!shop` - lista itema za kupovinu\n"
-            "`!kupi <item>` - kupi oružje / zaštitu\n"
-            "`!daily` - dnevna nagrada\n"
+            "**!prijava** - `otvara račun\n`"
+            "**!banka** - `stanje novca i inventory\n`"
+            "**!pay @user <iznos>** - `pošalji novac\n`"
+            "**!daily** - `dnevna nagrada\n`"
+            "**!pljackaj @user** - `pljačka igrača\n`"
+            "**!crime** - `kriminal (treba pištolj)\n`"
+            "**!operipare** - `pranje prljavog novca\n`"
+            "**!slot <iznos>** - `slot mašina\n`"
+            "**!rulet <boja/broj> <iznos>** - `rulet\n"
+            "**!biznisi** - `lista biznisa\n`"
+            "**!kupibiz <ime>** - `kupi biznis\n`"
+            "**!uzmipare** - `uzmi pare iz biznisa\n`"
+            "**!vratidug <iznos>** - `vrati dug\n`"
+            "`!top10` - leaderboard"
+            "`!radi` - **da odradiš posao**
         ),
-        inline=False
-    )
-
-    embed.add_field(
-        name="💀 Risk / Crime",
-        value=(
-            "`!pljackaj @user` - pljačka igrača\n"
-            "`!crime` - kriminal (treba pištolj)\n"
-            "`!operipare` - pranje prljavog novca\n"
-        ),
-        inline=False
-    )
-
-    embed.add_field(
-        name="🎰 Casino",
-        value=(
-            "`!slot <iznos>` - slot mašina\n"
-            "`!rulet <color/broj> <iznos>` - rulet igra\n"
-        ),
-        inline=False
-    )
-
-    embed.add_field(
-        name="🏢 Biznis sistem",
-        value=(
-            "`!biznisi` - lista biznisa\n"
-            "`!kupibiz <ime>` - kupi biznis\n"
-            "`!uzmipare` - uzmi pare iz biznisa\n"
-        ),
-        inline=False
-    )
-
-    embed.add_field(
-        name="🏆 Statistika",
-        value="`!top10` - najbogatiji igrači",
         inline=False
     )
 
