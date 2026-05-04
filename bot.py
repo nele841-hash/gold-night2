@@ -322,6 +322,78 @@ async def podigni(ctx, amount: int):
     )
 
     await ctx.reply(embed=embed, mention_author=False)
+
+# ---------------- PREBACI ----------------
+@bot.command()
+@kazino_only()
+async def prebaci(ctx, amount: int):
+    user_id = str(ctx.author.id)
+
+    user = users.find_one({"_id": user_id})
+
+    if not user:
+        return await ctx.reply(
+            "❌ Moraš prvo otvoriti račun sa `!prijava`",
+            mention_author=False
+        )
+
+    if amount < 1:
+        return await ctx.reply(
+            "❌ Minimalan iznos je 1€",
+            mention_author=False
+        )
+
+    cash = user.get("cash", 0)
+
+    if cash < amount:
+        return await ctx.reply(
+            "❌ Nemaš dovoljno novca!",
+            mention_author=False
+        )
+
+    # 💣 HARD EKONOMIJA (5% fee)
+    fee = int(amount * 0.05)
+    final_amount = amount - fee
+
+    users.update_one(
+        {"_id": user_id},
+        {
+            "$inc": {
+                "cash": -amount,
+                "bank": final_amount
+            }
+        }
+    )
+
+    updated = users.find_one({"_id": user_id})
+
+    def f(x):
+        return f"{x:,}".replace(",", ".") + "€"
+
+    embed = discord.Embed(
+        title="Transakcija",
+        color=discord.Color.green()
+    )
+
+    embed.add_field(
+        name="• Prebačeno",
+        value=f"```{f(final_amount)}```",
+        inline=True
+    )
+
+    embed.add_field(
+        name="• Banka",
+        value=f"```{f(updated.get('bank', 0))}```",
+        inline=True
+    )
+
+    embed.add_field(
+        name="• Naknada",
+        value=f"```-{f(fee)}```",
+        inline=False
+    )
+
+    await ctx.reply(embed=embed, mention_author=False)
 # ---------------- CRIME ----------------
 @bot.command()
 @kazino_only()
