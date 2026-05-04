@@ -1613,9 +1613,15 @@ async def avatar(ctx, member: discord.Member = None):
 
 #---------------šamar---------------
 @bot.command()
-async def testgif(ctx):
-    await ctx.send("https://media1.tenor.com/m/wLgfcMfKkpoAAAAC/slap-chappelle-show.gif")
+async def osamari(ctx, member: discord.Member = None):
 
+    if member is None:
+        return await ctx.reply("❌ Moraš tagovati nekoga!", mention_author=False)
+
+    await ctx.send(
+        f"💢 **{ctx.author.name}** je ošamario **{member.name}** 😂\n"
+        "https://media1.tenor.com/m/wLgfcMfKkpoAAAAC/slap-chappelle-show.gif"
+    )
 #-----------------------s---------------
 @bot.event
 async def on_command_error(ctx, error):
