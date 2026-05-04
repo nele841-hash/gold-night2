@@ -1085,7 +1085,7 @@ async def rulet(ctx, choice: str, amount: int):
 
     await msg.edit(embed=embed)
 @bot.command()
-@kazino_only()
+
 async def help(ctx):
 
     embed = discord.Embed(
