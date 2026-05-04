@@ -376,7 +376,7 @@ async def prebaci(ctx, amount: int):
     )
 
     embed.add_field(
-        name="• Prebačeno",
+        name="Prebačeno",
         value=f"```{f(final_amount)}```",
         inline=True
     )
