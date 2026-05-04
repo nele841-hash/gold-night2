@@ -19,6 +19,13 @@ intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
+#-----------------------kazino only-----------------
+KAZINO_CHANNEL_ID = 1500745787716403280
+
+def kazino_only():
+    async def predicate(ctx):
+        return ctx.channel.id == KAZINO_CHANNEL_ID
+    return commands.check(predicate)
 # ---------------- MONGO ----------------
 client = MongoClient(os.getenv("MONGO_URL"))
 db = client["discordbot"]
@@ -88,6 +95,7 @@ async def on_member_join(member):
     await channel.send(embed=embed)
 # ---------------- PRIJAVA ----------------
 @bot.command()
+@kazino_only()
 async def prijava(ctx):
     user_id = str(ctx.author.id)
 
