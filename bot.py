@@ -1111,7 +1111,12 @@ async def help(ctx):
             "`!uzmipare` - **Uzmi pare iz biznisa**\n"
             "`!vratidug <iznos>` - **Vrati dug**\n"
             "`!top10` - **Leaderboard**\n"
-            "`!radi` - **Da odradiš posao**"
+            "`!radi` - **Da odradiš posao\n**"
+            "`!kredit` - **Da podigneš kredit\n**"
+            "`!shop` - **Da pogledaš shop\n**"
+            "`!kupi <item>` - **Da kupiš item\n**"
+
+        
         ),
         inline=False
     )
