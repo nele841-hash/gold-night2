@@ -244,7 +244,6 @@ async def banka(ctx):
 
     biz_names = {
         "diler": "👑 Diler",
-        "klanicakarić": "🥩 Klaonica Karić",
         "kiosk": "🏪 Kiosk",
         "restoran": "🍔 Restoran",
         "autoservis": "🏭 Auto Servis",
@@ -1241,11 +1240,6 @@ async def biznisi(ctx):
         inline=False
     )
 
-    embed.add_field(
-        name="🥩 Klaonica Karić",
-        value="💰 Cijena: `2.000.000€`\n💸 Zarada: `100.000€ / 24h`",
-        inline=False
-    )
 
     embed.add_field(
         name="🏪 Kiosk",
@@ -1304,7 +1298,6 @@ async def kupibiz(ctx, *, biznis: str):
 
     names = {
         "diler": "👑 Diler",
-        "klanicakarić": "🥩 Klaonica Karić",
         "kiosk": "🏪 Kiosk",
         "restoran": "🍔 Restoran",
         "autoservis": "🏭 Auto Servis",
@@ -1405,7 +1398,6 @@ async def uzmipare(ctx):
 
     names = {
         "diler": "👑 Diler",
-        "klanicakarić": "🥩 Klaonica Karić",
         "kladionica": "🎰 Kladionica",
         "klaonica": "🥩 Klaonica",
         "kiosk": "🏪 Kiosk"
