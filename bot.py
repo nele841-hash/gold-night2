@@ -801,6 +801,7 @@ async def vratidug(ctx, amount: int):
 @bot.command()
 @kazino_only()
 async def pljackaj(ctx, member: discord.Member):
+
     user_id = str(ctx.author.id)
     target_id = str(member.id)
 
@@ -808,41 +809,69 @@ async def pljackaj(ctx, member: discord.Member):
     target = users.find_one({"_id": target_id})
 
     if not user:
-        return ctx.reply("❌ Moraš prvo otvoriti račun sa `!prijava`", mention_author=False)
+        return await ctx.reply(
+            "❌ Moraš prvo otvoriti račun sa `!prijava`",
+            mention_author=False
+        )
 
     if not target:
-        return ctx.reply("❌ Taj korisnik nema račun!", mention_author=False)
+        return await ctx.reply(
+            "❌ Taj korisnik nema račun!",
+            mention_author=False
+        )
 
     if user_id == target_id:
-        return ctx.reply("❌ Ne možeš sebe opljačkati!", mention_author=False)
+        return await ctx.reply(
+            "❌ Ne možeš sebe opljačkati!",
+            mention_author=False
+        )
 
     now = int(time.time())
 
+    # ⏳ cooldown
     if now - user.get("rob_cd", 0) < 600:
         left = 600 - (now - user.get("rob_cd", 0))
-        return ctx.reply(f"⏳ Čekaj još {left//60}m {left%60}s", mention_author=False)
+
+        return await ctx.reply(
+            f"⏳ Čekaj još {left//60}m {left%60}s",
+            mention_author=False
+        )
 
     attacker_inv = user.get("inventory", [])
     target_inv = target.get("inventory", [])
 
+    # 🔪 mora imati nož
     if "knife" not in attacker_inv:
-        return ctx.reply("❌ Treba ti nož za pljačku!", mention_author=False)
+        return await ctx.reply(
+            "❌ Treba ti nož za pljačku!",
+            mention_author=False
+        )
 
-    # 🔪 uvijek gubi nož
+    # 🔪 uvijek izgubi nož
     attacker_inv.remove("knife")
 
     # 🛡️ zaštita
     if "zastita" in target_inv:
+
         target_inv.remove("zastita")
 
         users.update_one(
             {"_id": user_id},
-            {"$set": {"inventory": attacker_inv, "rob_cd": now}}
+            {
+                "$set": {
+                    "inventory": attacker_inv,
+                    "rob_cd": now
+                }
+            }
         )
 
         users.update_one(
             {"_id": target_id},
-            {"$set": {"inventory": target_inv}}
+            {
+                "$set": {
+                    "inventory": target_inv
+                }
+            }
         )
 
         embed = discord.Embed(
@@ -852,13 +881,13 @@ async def pljackaj(ctx, member: discord.Member):
 
         embed.add_field(
             name="PLJAČKAŠ",
-            value=f"```{ctx.author}```",
+            value=f"```{ctx.author.name}```",
             inline=True
         )
 
         embed.add_field(
             name="ŽRTVA",
-            value=f"```{member}```",
+            value=f"```{member.name}```",
             inline=True
         )
 
@@ -868,21 +897,52 @@ async def pljackaj(ctx, member: discord.Member):
             inline=False
         )
 
-        return ctx.reply(embed=embed, mention_author=False)
+        return await ctx.reply(
+            embed=embed,
+            mention_author=False
+        )
 
-    # 💰 UVIJEK USPJEH (NO FAIL)
-    stolen = int(target.get("cash", 0) * 0.25)
+    # 💰 uvijek uspjeh
+    target_cash = target.get("cash", 0)
+
+    if target_cash <= 0:
+
+        users.update_one(
+            {"_id": user_id},
+            {
+                "$set": {
+                    "inventory": attacker_inv,
+                    "rob_cd": now
+                }
+            }
+        )
+
+        return await ctx.reply(
+            "❌ Igrač nema novca! Izgubio si nož.",
+            mention_author=False
+        )
+
+    stolen = int(target_cash * 0.25)
 
     users.update_one(
         {"_id": target_id},
-        {"$inc": {"cash": -stolen}}
+        {
+            "$inc": {
+                "cash": -stolen
+            }
+        }
     )
 
     users.update_one(
         {"_id": user_id},
         {
-            "$inc": {"cash": stolen},
-            "$set": {"inventory": attacker_inv, "rob_cd": now}
+            "$inc": {
+                "cash": stolen
+            },
+            "$set": {
+                "inventory": attacker_inv,
+                "rob_cd": now
+            }
         }
     )
 
@@ -893,13 +953,13 @@ async def pljackaj(ctx, member: discord.Member):
 
     embed.add_field(
         name="PLJAČKAŠ",
-        value=f"```{ctx.author}```",
+        value=f"```{ctx.author.name}```",
         inline=True
     )
 
     embed.add_field(
         name="ŽRTVA",
-        value=f"```{member}```",
+        value=f"```{member.name}```",
         inline=True
     )
 
@@ -909,7 +969,10 @@ async def pljackaj(ctx, member: discord.Member):
         inline=False
     )
 
-    ctx.reply(embed=embed, mention_author=False)
+    await ctx.reply(
+        embed=embed,
+        mention_author=False
+    )
 #-----------------SET-----------------------
 @bot.command()
 @kazino_only()
