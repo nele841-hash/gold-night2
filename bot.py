@@ -1116,34 +1116,47 @@ import time
 @bot.command()
 @kazino_only()
 async def rulet(ctx, choice: str, amount: int):
+
     user_id = str(ctx.author.id)
 
     user = users.find_one({"_id": user_id})
 
     if not user:
-        return await ctx.reply("❌ Moraš prvo otvoriti račun sa `!prijava`", mention_author=False)
+        return await ctx.reply(
+            "❌ Moraš prvo otvoriti račun sa `!prijava`",
+            mention_author=False
+        )
 
     if amount < 1:
-        return await ctx.reply("❌ Minimalan ulog je 1$", mention_author=False)
+        return await ctx.reply(
+            "❌ Minimalan ulog je 1€",
+            mention_author=False
+        )
 
     cash = user.get("cash", 0)
 
     if cash < amount:
-        return await ctx.reply("❌ Nemaš dovoljno novca!", mention_author=False)
+        return await ctx.reply(
+            "❌ Nemaš dovoljno novca!",
+            mention_author=False
+        )
 
-    # 🚫 anti-spam cooldown
+    # 🚫 anti spam
     now = int(time.time())
     last = user.get("rulet_cd", 0)
 
     if now - last < 5:
-        return await ctx.reply("⏳ Sačekaj malo prije ponovnog ruleta!", mention_author=False)
+        return await ctx.reply(
+            "⏳ Sačekaj malo prije ponovnog ruleta!",
+            mention_author=False
+        )
 
     users.update_one(
         {"_id": user_id},
         {"$set": {"rulet_cd": now}}
     )
 
-    # 🎰 START
+    # 🎰 spinning
     embed = discord.Embed(
         title="🎰 RULET SE VRTI...",
         description="⏳ Sačekajte 5 sekundi...",
@@ -1157,8 +1170,15 @@ async def rulet(ctx, choice: str, amount: int):
     # 🎲 BROJ
     number = random.randint(0, 36)
 
-    red_numbers = {1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36}
-    black_numbers = {2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35}
+    red_numbers = {
+        1,3,5,7,9,12,14,16,18,
+        19,21,23,25,27,30,32,34,36
+    }
+
+    black_numbers = {
+        2,4,6,8,10,11,13,15,17,
+        20,22,24,26,28,29,31,33,35
+    }
 
     if number == 0:
         color = "green"
@@ -1169,32 +1189,42 @@ async def rulet(ctx, choice: str, amount: int):
 
     color_map = {
         "red": "🔴",
-        "black": "⚫️",
+        "black": "⚫",
         "green": "🟢"
     }
 
     choice = choice.lower()
-    win = 0
 
-    # 🎯 BROJ = 25x
+    profit = 0
+    won = False
+
+    # 🎯 BROJ
     if choice.isdigit():
+
         if int(choice) == number:
-            win = amount * 25
-        else:
-            win = -amount
+            won = True
+            profit = amount * 10   # prije 25x
 
+    # 🎨 BOJA
     else:
-        # 🎨 BOJA
-        if choice == color:
-            if color == "green":
-                win = amount * 36
-            else:
-                win = amount * 2
-        else:
-            win = -amount
 
-    # 💾 CASH UPDATE
-    new_cash = cash + win
+        if choice == color:
+
+            won = True
+
+            # 🟢 GREEN
+            if color == "green":
+                profit = amount * 12   # prije 36x
+
+            # 🔴⚫ BOJE
+            else:
+                profit = amount        # pravi 2x ukupno
+
+    # 💰 CASH UPDATE
+    if won:
+        new_cash = cash + profit
+    else:
+        new_cash = cash - amount
 
     users.update_one(
         {"_id": user_id},
@@ -1207,15 +1237,30 @@ async def rulet(ctx, choice: str, amount: int):
     embed = discord.Embed(
         title="🎯 RULET REZULTAT",
         description=result_text,
-        color=discord.Color.green() if win > 0 else discord.Color.red()
+        color=discord.Color.green() if won else discord.Color.red()
     )
 
-    if win > 0:
-        embed.add_field(name="Dobitak", value=f"```+{win:,}$```", inline=False)
-    else:
-        embed.add_field(name="Gubitak", value=f"```{win:,}$```", inline=False)
+    if won:
 
-    embed.add_field(name="Stanje", value=f"```{new_cash:,}$```", inline=False)
+        embed.add_field(
+            name="Dobitak",
+            value=f"```+{profit:,}".replace(",", ".") + "€```",
+            inline=False
+        )
+
+    else:
+
+        embed.add_field(
+            name="Gubitak",
+            value=f"```-{amount:,}".replace(",", ".") + "€```",
+            inline=False
+        )
+
+    embed.add_field(
+        name="Stanje",
+        value=f"```{new_cash:,}".replace(",", ".") + "€```",
+        inline=False
+    )
 
     await msg.edit(embed=embed)
 
