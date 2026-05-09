@@ -1132,7 +1132,13 @@ async def rulet(ctx, choice: str, amount: int):
             "❌ Minimalan ulog je 1€",
             mention_author=False
         )
+    if amount > 1000000:
+         return await ctx.reply(
+        "❌ Maksimalan ulog je 1.000.000€",
+        mention_author=False
+        )
 
+    
     cash = user.get("cash", 0)
 
     if cash < amount:
@@ -1158,7 +1164,7 @@ async def rulet(ctx, choice: str, amount: int):
 
     # 🎰 spinning
     embed = discord.Embed(
-        title="🎰 RULET SE VRTI...",
+        title=" RULET SE VRTI...",
         description="⏳ Sačekajte 5 sekundi...",
         color=discord.Color.orange()
     )
