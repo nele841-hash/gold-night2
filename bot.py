@@ -1016,7 +1016,13 @@ async def slot(ctx, amount: int):
         return await ctx.reply("❌ Moraš prvo otvoriti račun sa `!prijava`", mention_author=False)
 
     if amount < 1:
-        return await ctx.reply("❌ Minimalan ulog je 1€", mention_author=False)
+        return await ctx.reply("❌ Minimalan ulog je 1€", mention_author=False),
+    
+    if amount > 1000000:
+         return await ctx.reply(
+        "❌ Maksimalan ulog je `1.000.000€`",
+        mention_author=False
+         )
 
     cash = user.get("cash", 0)
 
@@ -1129,12 +1135,12 @@ async def rulet(ctx, choice: str, amount: int):
 
     if amount < 1:
         return await ctx.reply(
-            "❌ Minimalan ulog je 1€",
+            "❌ Minimalan ulog je `1€`",
             mention_author=False
         )
     if amount > 1000000:
          return await ctx.reply(
-        "❌ Maksimalan ulog je 1.000.000€",
+        "❌ Maksimalan ulog je `1.000.000€`",
         mention_author=False
         )
 
