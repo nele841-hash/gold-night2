@@ -1799,7 +1799,6 @@ async def obavjestenje(ctx, *, poruka: str):
 
     await ctx.channel.send(embed=embed)
 
-# ---------------- CRASH ----------------
 @bot.command()
 async def crash(ctx, bet: int):
 
@@ -1821,16 +1820,18 @@ async def crash(ctx, bet: int):
 
     crash_point = round(random.uniform(1.2, 8.0), 2)
     multiplier = 1.0
+
     cashed_out = False
     crashed = False
 
+    # ---------------- BUTTON ----------------
     class Cashout(discord.ui.Button):
         def __init__(self):
             super().__init__(label="💰 ISPLATI", style=discord.ButtonStyle.green)
 
         async def callback(self, interaction: discord.Interaction):
 
-            nonlocal cashed_out
+            nonlocal cashed_out, multiplier
 
             if interaction.user.id != ctx.author.id:
                 return await interaction.response.send_message("❌ Nije tvoja igra", ephemeral=True)
@@ -1861,7 +1862,7 @@ async def crash(ctx, bet: int):
 
             await interaction.response.edit_message(embed=embed, view=None)
 
-    view = discord.ui.View()
+    view = discord.ui.View(timeout=None)
     view.add_item(Cashout())
 
     embed = discord.Embed(
@@ -1878,14 +1879,17 @@ async def crash(ctx, bet: int):
 
         await asyncio.sleep(1)
 
+        if cashed_out:
+            return
+
         multiplier += round(random.uniform(0.05, 0.25), 2)
 
         embed.description = f"Multiplier: **{multiplier:.2f}x**\nUlog: {bet}€"
 
-        await msg.edit(embed=embed)
-
-        if cashed_out:
-            return
+        try:
+            await msg.edit(embed=embed, view=view)
+        except:
+            pass
 
     crashed = True
 
