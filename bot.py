@@ -1818,6 +1818,7 @@ async def crash(ctx, bet: int):
     if cash < bet:
         return await ctx.send("❌ Nemaš dovoljno novca.")
 
+    # skini pare odmah
     users.update_one({"_id": user_id}, {"$inc": {"cash": -bet}})
 
     multiplier = 1.00
@@ -1832,10 +1833,11 @@ async def crash(ctx, bet: int):
             super().__init__(label="💰 Isplati", style=discord.ButtonStyle.green)
 
         async def callback(self, interaction: discord.Interaction):
+
             nonlocal cashed_out
 
             if interaction.user.id != ctx.author.id:
-                return await interaction.response.send_message("Nije tvoja igra.", ephemeral=True)
+                return await interaction.response.send_message("❌ Nije tvoja igra.", ephemeral=True)
 
             if cashed_out:
                 return
@@ -1853,28 +1855,28 @@ async def crash(ctx, bet: int):
             )
 
             embed = discord.Embed(
-                title=f"🚀 {ctx.author.name} - Crash",
-                description="🎉 ISPLATA USPJEŠNA",
+                title="🚀 CRASH ISPLATA",
+                description=f"✅ Cashout na {multiplier:.2f}x",
                 color=0x2ecc71
             )
 
-            embed.add_field(name="✋ Povukli ste", value=f"{multiplier:.2f}x", inline=True)
-            embed.add_field(name="💥 Raketa pukla", value=f"{crash_point:.2f}x", inline=True)
-            embed.add_field(name="💰 Zarađeno", value=f"{winnings}€", inline=False)
+            embed.add_field(name="💰 Dobitak", value=f"{winnings}€", inline=False)
+            embed.add_field(name="📊 Multiplier", value=f"{crash_point:.2f}x", inline=False)
 
             await interaction.response.edit_message(embed=embed, view=None)
 
-    view = discord.ui.View()
+    view = View()
     view.add_item(Cashout())
 
     embed = discord.Embed(
-        title=f"🚀 {ctx.author.name} - Crash",
+        title=f"🚀 Crash - {ctx.author.name}",
         description=f"Multiplier: **1.00x**\nUlog: {bet}€",
         color=0xf1c40f
     )
 
     msg = await ctx.send(embed=embed, view=view)
 
+    # ---------------- GAME LOOP ----------------
     while multiplier < crash_point:
 
         await asyncio.sleep(0.7)
@@ -1886,23 +1888,23 @@ async def crash(ctx, bet: int):
         await msg.edit(embed=embed)
 
         if cashed_out:
+            crashed = True
             return
 
     crashed = True
 
+    # ---------------- CRASH ----------------
     if not cashed_out:
 
         embed = discord.Embed(
-            title=f"💥 {ctx.author.name} - Crash",
-            description=f"❌ CRASH NA {crash_point:.2f}x",
+            title="💥 CRASH",
+            description=f"❌ Puklo na {crash_point:.2f}x",
             color=0xe74c3c
         )
 
         embed.add_field(name="📉 Izgubljeno", value=f"{bet}€", inline=False)
 
         await msg.edit(embed=embed, view=None)
-
-
 # ---------------- RUN ----------------
 
 
