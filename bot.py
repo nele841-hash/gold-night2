@@ -1948,53 +1948,64 @@ async def hilo(ctx, bet: int):
     user = users.find_one({"_id": user_id})
 
     if not user:
-        return await ctx.send("❌ Moraš prvo !prijava")
+        return await ctx.reply("❌ Moraš prvo !prijava")
 
     cash = user.get("cash", 0)
 
     if bet <= 0:
-        return await ctx.send("❌ Neispravan ulog.")
+        return await ctx.reply("❌ Neispravan ulog.")
 
     if bet > 50000:
-        return await ctx.send("❌ Maksimalan ulog je 50.000€")
+        return await ctx.reply("❌ Maksimalan ulog je 50.000€")
 
     if cash < bet:
-        return await ctx.send("❌ Nemaš dovoljno novca.")
+        return await ctx.reply("❌ Nemaš dovoljno novca.")
 
-    # uzmi ulog odmah
     users.update_one({"_id": user_id}, {"$inc": {"cash": -bet}})
 
     current = random.randint(1, 13)
     next_card = random.randint(1, 13)
+
+    def format_money(x):
+        return f"{x:,}€".replace(",", ".")
+
+    def make_embed(title, desc, color):
+        embed = discord.Embed(title=title, description=desc, color=color)
+        embed.set_footer(text="🎲 HiLo Casino")
+        return embed
 
     class Higher(discord.ui.Button):
         def __init__(self):
             super().__init__(label="⬆ VEĆE", style=discord.ButtonStyle.green)
 
         async def callback(self, interaction: discord.Interaction):
+
             if interaction.user.id != ctx.author.id:
-                return await interaction.response.send_message("❌ Ovo nije tvoja igra!", ephemeral=True)
+                return await interaction.response.send_message(
+                    "❌ Ovo nije tvoja igra.", ephemeral=True
+                )
 
             win = next_card > current
 
             if win:
-                payout = int(bet * 1.95)
+                payout = int(bet * 1.5)
                 users.update_one({"_id": user_id}, {"$inc": {"cash": payout}})
 
-                embed = discord.Embed(
-                    title="📈 HiLo WIN",
-                    description=f"✔ Pogodio si!\nBroj: {current} → {next_card}",
-                    color=0x2ecc71
+                embed = make_embed(
+                    "📈 HiLo WIN",
+                    f"✔ **Pogodio si!**\n\n"
+                    f"Broj: `{current}` → `{next_card}`\n\n"
+                    f"💰 **Dobitak: {format_money(payout)}**",
+                    0x2ecc71
                 )
-                embed.add_field(name="💰 Dobitak", value=f"+{payout}€", inline=False)
-
             else:
-                embed = discord.Embed(
-                    title="📉 HiLo LOSS",
-                    description=f"❌ Pogriješio si!\nBroj: {current} → {next_card}",
-                    color=0xe74c3c
+                embed = make_embed(
+                    "📉 HiLo LOSS",
+                    f"❌ **Izgubio si!**\n\n"
+                    f"Broj: `{current}` → `{next_card}`\n\n"
+                    f"💸 **Gubitak: {format_money(bet)}",
+                    0xe74c3c
                 )
-                embed.add_field(name="💸 Izgubljeno", value=f"-{bet}€", inline=False)
 
             await interaction.response.edit_message(embed=embed, view=None)
 
@@ -2004,29 +2015,33 @@ async def hilo(ctx, bet: int):
             super().__init__(label="⬇ MANJE", style=discord.ButtonStyle.red)
 
         async def callback(self, interaction: discord.Interaction):
+
             if interaction.user.id != ctx.author.id:
-                return await interaction.response.send_message("❌ Ovo nije tvoja igra!", ephemeral=True)
+                return await interaction.response.send_message(
+                    "❌ Ovo nije tvoja igra.", ephemeral=True
+                )
 
             win = next_card < current
 
             if win:
-                payout = int(bet * 1.95)
+                payout = int(bet * 1.5)
                 users.update_one({"_id": user_id}, {"$inc": {"cash": payout}})
 
-                embed = discord.Embed(
-                    title="📈 HiLo WIN",
-                    description=f"✔ Pogodio si!\nBroj: {current} → {next_card}",
-                    color=0x2ecc71
+                embed = make_embed(
+                    "📈 HiLo WIN",
+                    f"✔ **Pogodio si!**\n\n"
+                    f"Broj: `{current}` → `{next_card}`\n\n"
+                    f"💰 **Dobitak: {format_money(payout)}**",
+                    0x2ecc71
                 )
-                embed.add_field(name="💰 Dobitak", value=f"+{payout}€", inline=False)
-
             else:
-                embed = discord.Embed(
-                    title="📉 HiLo LOSS",
-                    description=f"❌ Pogriješio si!\nBroj: {current} → {next_card}",
-                    color=0xe74c3c
+                embed = make_embed(
+                    "📉 HiLo LOSS",
+                    f"❌ **Izgubio si!**\n\n"
+                    f"Broj: `{current}` → `{next_card}`\n\n"
+                    f"💸 **Gubitak: {format_money(bet)}",
+                    0xe74c3c
                 )
-                embed.add_field(name="💸 Izgubljeno", value=f"-{bet}€", inline=False)
 
             await interaction.response.edit_message(embed=embed, view=None)
 
@@ -2036,11 +2051,16 @@ async def hilo(ctx, bet: int):
     view.add_item(Lower())
 
     embed = discord.Embed(
-        title="🎲 HiLo Game",
-        description=f"Broj: **{current}**\nUlog: {bet}€",
+        title="🎲 HiLo Casino",
+        description=(
+            f"📊 Trenutni broj: **{current}**\n"
+            f"💵 Ulog: **{format_money(bet)}**\n\n"
+            f"👉 Izaberi: VEĆE ili MANJE"
+        ),
         color=0xf1c40f
     )
 
+    embed.set_footer(text="🎰 Sretno!")
     await ctx.send(embed=embed, view=view, reference=ctx.message)
 # ---------------- RUN ----------------
 
