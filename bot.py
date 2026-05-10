@@ -1801,35 +1801,6 @@ async def obavjestenje(ctx, *, poruka: str):
 
 # ---------------- CRASH ----------------
 @bot.command()
-
-async def crash(ctx, bet: int):
-
-    user_id = str(ctx.author.id)
-
-    user = users.find_one({"_id": user_id})
-
-    if not user:
-        return await ctx.send("❌ Moraš prvo !prijava")
-
-    cash = user.get("cash", 0)
-
-    if bet <= 0:
-        return await ctx.send("❌ Neispravan ulog.")
-
-    if cash < bet:
-        return await ctx.send("❌ Nemaš dovoljno novca.")
-
-    # skini pare odmah
-    users.update_one({"_id": user_id}, {"$inc": {"cash": -bet}})
-
-    multiplier = 1.00
-    cashed_out = False
-    crashed = False
-
-    crash_point = round(random.uniform(1.20, 10.00), 2)
-
-# ---------------- CRASH ----------------
-@bot.command()
 async def crash(ctx, bet: int):
 
     user_id = str(ctx.author.id)
