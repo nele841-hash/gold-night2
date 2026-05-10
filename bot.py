@@ -2039,7 +2039,7 @@ async def hilo(ctx, bet: int):
                     "📉 HiLo LOSS",
                     f"❌ **Izgubio si!**\n\n"
                     f"Broj: `{current}` → `{next_card}`\n\n"
-                    f"💸 **Gubitak: {format_money(bet)}",
+                    f"💸 Gubitak: **{format_money(bet)}**",
                     0xe74c3c
                 )
 
