@@ -1939,6 +1939,133 @@ async def crash(ctx, bet: int):
         )
 
         await msg.edit(embed=embed, view=None)
+
+#---------------HiLo------------------
+@bot.command()
+async def hilo(ctx, bet: int):
+
+    user_id = str(ctx.author.id)
+    user = users.find_one({"_id": user_id})
+
+    if not user:
+        return await ctx.reply("❌ Moraš prvo !prijava", mention_author=False)
+
+    cash = user.get("cash", 0)
+
+    if bet <= 0:
+        return await ctx.reply("❌ Neispravan ulog.", mention_author=False)
+
+    if bet > 50000:
+        return await ctx.reply("❌ Maksimalan ulog je 50.000€", mention_author=False)
+
+    if cash < bet:
+        return await ctx.reply("❌ Nemaš dovoljno novca.", mention_author=False)
+
+    users.update_one({"_id": user_id}, {"$inc": {"cash": -bet}})
+
+    # 🎲 prvi broj
+    current = random.randint(1, 100)
+
+    ended = False
+
+    # ---------------- BUTTONS ----------------
+    class BetHigher(discord.ui.Button):
+        def __init__(self):
+            super().__init__(label="🔼 VEĆE", style=discord.ButtonStyle.green)
+
+        async def callback(self, interaction: discord.Interaction):
+            nonlocal current, ended
+
+            if interaction.user.id != ctx.author.id:
+                return await interaction.response.send_message("❌ Nije tvoja igra", ephemeral=True)
+
+            if ended:
+                return
+
+            next_num = random.randint(1, 100)
+
+            if next_num > current:
+                current = next_num
+
+                embed = discord.Embed(
+                    title="🎮 HILO",
+                    description=f"✔️ Tačno! Novi broj: **{current}**",
+                    color=discord.Color.green()
+                )
+
+                await interaction.response.edit_message(embed=embed)
+
+            else:
+                ended = True
+
+                embed = discord.Embed(
+                    title="💥 HILO",
+                    description=f"❌ Pogriješio si!\nBroj je bio **{next_num}**",
+                    color=discord.Color.red()
+                )
+
+                embed.add_field(
+                    name="💸 Izgubio si",
+                    value=f"`{bet:,}€`".replace(",", "."),
+                    inline=False
+                )
+
+                await interaction.response.edit_message(embed=embed, view=None)
+
+    class BetLower(discord.ui.Button):
+        def __init__(self):
+            super().__init__(label="🔽 MANJE", style=discord.ButtonStyle.red)
+
+        async def callback(self, interaction: discord.Interaction):
+            nonlocal current, ended
+
+            if interaction.user.id != ctx.author.id:
+                return await interaction.response.send_message("❌ Nije tvoja igra", ephemeral=True)
+
+            if ended:
+                return
+
+            next_num = random.randint(1, 100)
+
+            if next_num < current:
+                current = next_num
+
+                embed = discord.Embed(
+                    title="🎮 HILO",
+                    description=f"✔️ Tačno! Novi broj: **{current}**",
+                    color=discord.Color.green()
+                )
+
+                await interaction.response.edit_message(embed=embed)
+
+            else:
+                ended = True
+
+                embed = discord.Embed(
+                    title="💥 HILO",
+                    description=f"❌ Pogriješio si!\nBroj je bio **{next_num}**",
+                    color=discord.Color.red()
+                )
+
+                embed.add_field(
+                    name="💸 Izgubio si",
+                    value=f"`{bet:,}€`".replace(",", "."),
+                    inline=False
+                )
+
+                await interaction.response.edit_message(embed=embed, view=None)
+
+    view = discord.ui.View(timeout=None)
+    view.add_item(BetHigher())
+    view.add_item(BetLower())
+
+    embed = discord.Embed(
+        title="🎮 HILO GAME",
+        description=f"🎲 Početni broj: **{current}**\n📌 Pogodi: VEĆE ili MANJE",
+        color=discord.Color.orange()
+    )
+
+    await ctx.reply(embed=embed, view=view)
 # ---------------- RUN ----------------
 
 
