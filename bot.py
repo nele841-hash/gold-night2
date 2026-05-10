@@ -176,7 +176,7 @@ async def radi(ctx):
     await ctx.reply(embed=embed, mention_author=False)
 # ---------------- BANKA ----------------
 @bot.command()
-@kazino_only()
+
 async def banka(ctx):
     user_id = str(ctx.author.id)
 
@@ -975,7 +975,7 @@ async def pljackaj(ctx, member: discord.Member):
     )
 #-----------------SET-----------------------
 @bot.command()
-@kazino_only()
+
 async def set(ctx, member: discord.Member, amount: int):
     OWNER_IDS = [
         1423978463290982470,
@@ -1798,7 +1798,6 @@ async def obavjestenje(ctx, *, poruka: str):
 
     await ctx.channel.send(embed=embed)
 
-#---------------crash---------------------
 # ---------------- CRASH ----------------
 @bot.command()
 
