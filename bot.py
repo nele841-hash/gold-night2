@@ -1799,7 +1799,7 @@ async def obavjestenje(ctx, *, poruka: str):
 
     await ctx.channel.send(embed=embed)
 
-#--------------crash--------------
+#-----------crash------------------------
 @bot.command()
 async def crash(ctx, bet: int):
 
@@ -1807,23 +1807,21 @@ async def crash(ctx, bet: int):
     user = users.find_one({"_id": user_id})
 
     if not user:
-        return await ctx.send("❌ Moraš prvo !prijava")
+        return await ctx.reply("❌ Moraš prvo !prijava", mention_author=False)
 
     cash = user.get("cash", 0)
 
-    # 🔥 MAX BET LIMIT
     if bet <= 0:
-        return await ctx.send("❌ Neispravan ulog.")
+        return await ctx.reply("❌ Neispravan ulog.", mention_author=False)
 
     if bet > 50000:
-        return await ctx.send("❌ Maksimalan ulog je 50.000€")
+        return await ctx.reply("❌ Maksimalan ulog je 50.000€", mention_author=False)
 
     if cash < bet:
-        return await ctx.send("❌ Nemaš dovoljno novca.")
+        return await ctx.reply("❌ Nemaš dovoljno novca.", mention_author=False)
 
     users.update_one({"_id": user_id}, {"$inc": {"cash": -bet}})
 
-    # 🎲 REALNIJI CRASH (više low multipliers)
     crash_point = round(random.uniform(1.01, 6.50), 2)
     multiplier = 1.00
 
@@ -1839,14 +1837,21 @@ async def crash(ctx, bet: int):
 
             nonlocal cashed_out, multiplier
 
+            # 🔒 samo owner
             if interaction.user.id != ctx.author.id:
-                return await interaction.response.send_message("❌ Nije tvoja igra", ephemeral=True)
+                return await interaction.response.send_message(
+                    "❌ Ovo nije tvoja igra.",
+                    ephemeral=True
+                )
 
             if cashed_out:
                 return
 
             if crashed:
-                return await interaction.response.send_message("💥 Prekasno!", ephemeral=True)
+                return await interaction.response.send_message(
+                    "💥 Prekasno!",
+                    ephemeral=True
+                )
 
             cashed_out = True
 
@@ -1859,24 +1864,23 @@ async def crash(ctx, bet: int):
 
             embed = discord.Embed(
                 title="🚀 CRASH ISPLATA",
-                description="💸 **USPJEŠNO ISPLAĆENO**",
                 color=discord.Color.green()
             )
 
             embed.add_field(
-                name="💰 Povukao si na",
+                name="💰 Povukao si na:",
                 value=f"`{multiplier:.2f}x`",
                 inline=True
             )
 
             embed.add_field(
-                name="💥 Crash point",
+                name="💥 Puklo na:",
                 value=f"`{crash_point:.2f}x`",
                 inline=True
             )
 
             embed.add_field(
-                name="💵 Zaradio si",
+                name="💵 Dobitak:",
                 value=f"`{winnings:,}€`".replace(",", "."),
                 inline=False
             )
@@ -1886,13 +1890,15 @@ async def crash(ctx, bet: int):
     view = discord.ui.View(timeout=None)
     view.add_item(Cashout())
 
-    embed = discord.Embed(
-        title="🚀 CRASH GAME",
-        description=f"🎯 Multiplier: **{multiplier:.2f}x**\n💸 Ulog: `{bet:,}€`".replace(",", "."),
-        color=discord.Color.orange()
+    # 📌 uvijek reply
+    msg = await ctx.reply(
+        embed=discord.Embed(
+            title="🚀 CRASH GAME",
+            description=f"📊 **Multi:** 1.00x\n💸 Ulog: `{bet:,}€`".replace(",", "."),
+            color=discord.Color.orange()
+        ),
+        view=view
     )
-
-    msg = await ctx.send(embed=embed, view=view)
 
     import asyncio
 
@@ -1905,9 +1911,10 @@ async def crash(ctx, bet: int):
 
         multiplier += round(random.uniform(0.03, 0.25), 2)
 
-        embed.description = (
-            f"🎯 Multiplier: **{multiplier:.2f}x**\n"
-            f"💸 Ulog: `{bet:,}€`".replace(",", ".")
+        embed = discord.Embed(
+            title="🚀 CRASH GAME",
+            description=f"📊 **Multi:** {multiplier:.2f}x\n💸 Ulog: `{bet:,}€`".replace(",", "."),
+            color=discord.Color.orange()
         )
 
         try:
@@ -1920,13 +1927,13 @@ async def crash(ctx, bet: int):
     if not cashed_out:
 
         embed = discord.Embed(
-            title="💥 CRASHED",
-            description=f"❌ PUKLO NA **{crash_point:.2f}x**",
+            title="💥 CRASH",
+            description=f"❌ PUKLO NA: {crash_point:.2f}x",
             color=discord.Color.red()
         )
 
         embed.add_field(
-            name="💸 Izgubio si",
+            name="💸 Izgubio si:",
             value=f"`{bet:,}€`".replace(",", "."),
             inline=False
         )
