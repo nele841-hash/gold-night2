@@ -1798,6 +1798,111 @@ async def obavjestenje(ctx, *, poruka: str):
 
     await ctx.channel.send(embed=embed)
 
+#---------------crash---------------------
+# ---------------- CRASH ----------------
+@bot.command()
+
+async def crash(ctx, bet: int):
+
+    user_id = str(ctx.author.id)
+
+    user = users.find_one({"_id": user_id})
+
+    if not user:
+        return await ctx.send("❌ Moraš prvo !prijava")
+
+    cash = user.get("cash", 0)
+
+    if bet <= 0:
+        return await ctx.send("❌ Neispravan ulog.")
+
+    if cash < bet:
+        return await ctx.send("❌ Nemaš dovoljno novca.")
+
+    users.update_one({"_id": user_id}, {"$inc": {"cash": -bet}})
+
+    multiplier = 1.00
+    cashed_out = False
+    crashed = False
+
+    crash_point = round(random.uniform(1.20, 10.00), 2)
+
+    # ---------------- BUTTON ----------------
+    class Cashout(Button):
+        def __init__(self):
+            super().__init__(label="💰 Isplati", style=discord.ButtonStyle.green)
+
+        async def callback(self, interaction: discord.Interaction):
+            nonlocal cashed_out
+
+            if interaction.user.id != ctx.author.id:
+                return await interaction.response.send_message("Nije tvoja igra.", ephemeral=True)
+
+            if cashed_out:
+                return
+
+            if crashed:
+                return await interaction.response.send_message("💥 Crashalo je!", ephemeral=True)
+
+            cashed_out = True
+
+            winnings = int(bet * multiplier)
+
+            users.update_one(
+                {"_id": user_id},
+                {"$inc": {"cash": winnings}}
+            )
+
+            embed = discord.Embed(
+                title=f"🚀 {ctx.author.name} - Crash",
+                description="🎉 ISPLATA USPJEŠNA",
+                color=0x2ecc71
+            )
+
+            embed.add_field(name="✋ Povukli ste", value=f"{multiplier:.2f}x", inline=True)
+            embed.add_field(name="💥 Raketa pukla", value=f"{crash_point:.2f}x", inline=True)
+            embed.add_field(name="💰 Zarađeno", value=f"{winnings}€", inline=False)
+
+            await interaction.response.edit_message(embed=embed, view=None)
+
+    view = discord.ui.View()
+    view.add_item(Cashout())
+
+    embed = discord.Embed(
+        title=f"🚀 {ctx.author.name} - Crash",
+        description=f"Multiplier: **1.00x**\nUlog: {bet}€",
+        color=0xf1c40f
+    )
+
+    msg = await ctx.send(embed=embed, view=view)
+
+    while multiplier < crash_point:
+
+        await asyncio.sleep(0.7)
+
+        multiplier += round(random.uniform(0.05, 0.30), 2)
+
+        embed.description = f"Multiplier: **{multiplier:.2f}x**\nUlog: {bet}€"
+
+        await msg.edit(embed=embed)
+
+        if cashed_out:
+            return
+
+    crashed = True
+
+    if not cashed_out:
+
+        embed = discord.Embed(
+            title=f"💥 {ctx.author.name} - Crash",
+            description=f"❌ CRASH NA {crash_point:.2f}x",
+            color=0xe74c3c
+        )
+
+        embed.add_field(name="📉 Izgubljeno", value=f"{bet}€", inline=False)
+
+        await msg.edit(embed=embed, view=None)
+
 
 # ---------------- RUN ----------------
 
