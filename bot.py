@@ -1828,6 +1828,34 @@ async def crash(ctx, bet: int):
 
     crash_point = round(random.uniform(1.20, 10.00), 2)
 
+# ---------------- CRASH ----------------
+@bot.command()
+@kazino_only()
+async def crash(ctx, bet: int):
+
+    user_id = str(ctx.author.id)
+
+    user = users.find_one({"_id": user_id})
+
+    if not user:
+        return await ctx.send("❌ Moraš prvo !prijava")
+
+    cash = user.get("cash", 0)
+
+    if bet <= 0:
+        return await ctx.send("❌ Neispravan ulog.")
+
+    if cash < bet:
+        return await ctx.send("❌ Nemaš dovoljno novca.")
+
+    # 💸 skini pare odmah
+    users.update_one({"_id": user_id}, {"$inc": {"cash": -bet}})
+
+    multiplier = 1.00
+    crash_point = round(random.uniform(1.20, 10.00), 2)
+
+    cashed_out = False
+
     # ---------------- BUTTON ----------------
     class Cashout(Button):
         def __init__(self):
@@ -1838,31 +1866,34 @@ async def crash(ctx, bet: int):
             nonlocal cashed_out
 
             if interaction.user.id != ctx.author.id:
-                return await interaction.response.send_message("❌ Nije tvoja igra.", ephemeral=True)
+                return await interaction.response.send_message(
+                    "❌ Nije tvoja igra.",
+                    ephemeral=True
+                )
 
             if cashed_out:
                 return
 
-            if crashed:
-                return await interaction.response.send_message("💥 Crashalo je!", ephemeral=True)
-
             cashed_out = True
 
-            winnings = int(bet * multiplier)
+            win = int(bet * multiplier)
 
             users.update_one(
                 {"_id": user_id},
-                {"$inc": {"cash": winnings}}
+                {"$inc": {"cash": win}}
             )
 
             embed = discord.Embed(
-                title="🚀 CRASH ISPLATA",
-                description=f"✅ Cashout na {multiplier:.2f}x",
+                title="🚀 CASHOUT",
+                description=f"✅ Isplatio si na {multiplier:.2f}x",
                 color=0x2ecc71
             )
 
-            embed.add_field(name="💰 Dobitak", value=f"{winnings}€", inline=False)
-            embed.add_field(name="📊 Multiplier", value=f"{crash_point:.2f}x", inline=False)
+            embed.add_field(
+                name="💰 Dobitak",
+                value=f"{win}€",
+                inline=False
+            )
 
             await interaction.response.edit_message(embed=embed, view=None)
 
@@ -1870,42 +1901,42 @@ async def crash(ctx, bet: int):
     view.add_item(Cashout())
 
     embed = discord.Embed(
-        title=f"🚀 Crash - {ctx.author.name}",
-        description=f"Multiplier: **1.00x**\nUlog: {bet}€",
+        title="🚀 CRASH",
+        description=f"Multiplier: 1.00x\nUlog: {bet}€",
         color=0xf1c40f
     )
 
     msg = await ctx.send(embed=embed, view=view)
 
-    # ---------------- GAME LOOP ----------------
+    # ---------------- LOOP ----------------
     while multiplier < crash_point:
 
         await asyncio.sleep(0.7)
 
         multiplier += round(random.uniform(0.05, 0.30), 2)
 
-        embed.description = f"Multiplier: **{multiplier:.2f}x**\nUlog: {bet}€"
+        embed.description = f"Multiplier: {multiplier:.2f}x\nUlog: {bet}€"
 
         await msg.edit(embed=embed)
 
         if cashed_out:
-            crashed = True
-            return
+            break
 
-    crashed = True
+    # 💥 CRASH END
+    embed = discord.Embed(
+        title="💥 CRASH",
+        description=f"Puklo na {crash_point:.2f}x",
+        color=0xe74c3c
+    )
 
-    # ---------------- CRASH ----------------
     if not cashed_out:
-
-        embed = discord.Embed(
-            title="💥 CRASH",
-            description=f"❌ Puklo na {crash_point:.2f}x",
-            color=0xe74c3c
+        embed.add_field(
+            name="📉 Izgubljeno",
+            value=f"{bet}€",
+            inline=False
         )
 
-        embed.add_field(name="📉 Izgubljeno", value=f"{bet}€", inline=False)
-
-        await msg.edit(embed=embed, view=None)
+    await msg.edit(embed=embed, view=None)
 # ---------------- RUN ----------------
 
 
