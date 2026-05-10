@@ -1799,6 +1799,7 @@ async def obavjestenje(ctx, *, poruka: str):
 
     await ctx.channel.send(embed=embed)
 
+#--------------crash--------------
 @bot.command()
 async def crash(ctx, bet: int):
 
@@ -1810,16 +1811,21 @@ async def crash(ctx, bet: int):
 
     cash = user.get("cash", 0)
 
+    # 🔥 MAX BET LIMIT
     if bet <= 0:
         return await ctx.send("❌ Neispravan ulog.")
+
+    if bet > 50000:
+        return await ctx.send("❌ Maksimalan ulog je 50.000€")
 
     if cash < bet:
         return await ctx.send("❌ Nemaš dovoljno novca.")
 
     users.update_one({"_id": user_id}, {"$inc": {"cash": -bet}})
 
-    crash_point = round(random.uniform(1.2, 8.0), 2)
-    multiplier = 1.0
+    # 🎲 REALNIJI CRASH (više low multipliers)
+    crash_point = round(random.uniform(1.01, 6.50), 2)
+    multiplier = 1.00
 
     cashed_out = False
     crashed = False
@@ -1853,12 +1859,27 @@ async def crash(ctx, bet: int):
 
             embed = discord.Embed(
                 title="🚀 CRASH ISPLATA",
-                description=f"✔️ Povukao si na **{multiplier:.2f}x**",
+                description="💸 **USPJEŠNO ISPLAĆENO**",
                 color=discord.Color.green()
             )
 
-            embed.add_field(name="💰 Dobitak", value=f"{winnings}€", inline=False)
-            embed.add_field(name="💥 Crash point", value=f"{crash_point:.2f}x", inline=False)
+            embed.add_field(
+                name="💰 Povukao si na",
+                value=f"`{multiplier:.2f}x`",
+                inline=True
+            )
+
+            embed.add_field(
+                name="💥 Crash point",
+                value=f"`{crash_point:.2f}x`",
+                inline=True
+            )
+
+            embed.add_field(
+                name="💵 Zaradio si",
+                value=f"`{winnings:,}€`".replace(",", "."),
+                inline=False
+            )
 
             await interaction.response.edit_message(embed=embed, view=None)
 
@@ -1867,7 +1888,7 @@ async def crash(ctx, bet: int):
 
     embed = discord.Embed(
         title="🚀 CRASH GAME",
-        description=f"Multiplier: **1.00x**\nUlog: {bet}€",
+        description=f"🎯 Multiplier: **{multiplier:.2f}x**\n💸 Ulog: `{bet:,}€`".replace(",", "."),
         color=discord.Color.orange()
     )
 
@@ -1882,9 +1903,12 @@ async def crash(ctx, bet: int):
         if cashed_out:
             return
 
-        multiplier += round(random.uniform(0.05, 0.25), 2)
+        multiplier += round(random.uniform(0.03, 0.25), 2)
 
-        embed.description = f"Multiplier: **{multiplier:.2f}x**\nUlog: {bet}€"
+        embed.description = (
+            f"🎯 Multiplier: **{multiplier:.2f}x**\n"
+            f"💸 Ulog: `{bet:,}€`".replace(",", ".")
+        )
 
         try:
             await msg.edit(embed=embed, view=view)
@@ -1896,9 +1920,15 @@ async def crash(ctx, bet: int):
     if not cashed_out:
 
         embed = discord.Embed(
-            title="💥 CRASH",
-            description=f"Puklo na **{crash_point:.2f}x**\n❌ Izgubio si {bet}€",
+            title="💥 CRASHED",
+            description=f"❌ PUKLO NA **{crash_point:.2f}x**",
             color=discord.Color.red()
+        )
+
+        embed.add_field(
+            name="💸 Izgubio si",
+            value=f"`{bet:,}€`".replace(",", "."),
+            inline=False
         )
 
         await msg.edit(embed=embed, view=None)
