@@ -1830,11 +1830,9 @@ async def crash(ctx, bet: int):
 
 # ---------------- CRASH ----------------
 @bot.command()
-@kazino_only()
 async def crash(ctx, bet: int):
 
     user_id = str(ctx.author.id)
-
     user = users.find_one({"_id": user_id})
 
     if not user:
@@ -1848,95 +1846,87 @@ async def crash(ctx, bet: int):
     if cash < bet:
         return await ctx.send("❌ Nemaš dovoljno novca.")
 
-    # 💸 skini pare odmah
     users.update_one({"_id": user_id}, {"$inc": {"cash": -bet}})
 
-    multiplier = 1.00
-    crash_point = round(random.uniform(1.20, 10.00), 2)
-
+    crash_point = round(random.uniform(1.2, 8.0), 2)
+    multiplier = 1.0
     cashed_out = False
+    crashed = False
 
-    # ---------------- BUTTON ----------------
-    class Cashout(Button):
+    class Cashout(discord.ui.Button):
         def __init__(self):
-            super().__init__(label="💰 Isplati", style=discord.ButtonStyle.green)
+            super().__init__(label="💰 ISPLATI", style=discord.ButtonStyle.green)
 
         async def callback(self, interaction: discord.Interaction):
 
             nonlocal cashed_out
 
             if interaction.user.id != ctx.author.id:
-                return await interaction.response.send_message(
-                    "❌ Nije tvoja igra.",
-                    ephemeral=True
-                )
+                return await interaction.response.send_message("❌ Nije tvoja igra", ephemeral=True)
 
             if cashed_out:
                 return
 
+            if crashed:
+                return await interaction.response.send_message("💥 Prekasno!", ephemeral=True)
+
             cashed_out = True
 
-            win = int(bet * multiplier)
+            winnings = int(bet * multiplier)
 
             users.update_one(
                 {"_id": user_id},
-                {"$inc": {"cash": win}}
+                {"$inc": {"cash": winnings}}
             )
 
             embed = discord.Embed(
-                title="🚀 CASHOUT",
-                description=f"✅ Isplatio si na {multiplier:.2f}x",
-                color=0x2ecc71
+                title="🚀 CRASH ISPLATA",
+                description=f"✔️ Povukao si na **{multiplier:.2f}x**",
+                color=discord.Color.green()
             )
 
-            embed.add_field(
-                name="💰 Dobitak",
-                value=f"{win}€",
-                inline=False
-            )
+            embed.add_field(name="💰 Dobitak", value=f"{winnings}€", inline=False)
+            embed.add_field(name="💥 Crash point", value=f"{crash_point:.2f}x", inline=False)
 
             await interaction.response.edit_message(embed=embed, view=None)
 
-    view = View()
+    view = discord.ui.View()
     view.add_item(Cashout())
 
     embed = discord.Embed(
-        title="🚀 CRASH",
-        description=f"Multiplier: 1.00x\nUlog: {bet}€",
-        color=0xf1c40f
+        title="🚀 CRASH GAME",
+        description=f"Multiplier: **1.00x**\nUlog: {bet}€",
+        color=discord.Color.orange()
     )
 
     msg = await ctx.send(embed=embed, view=view)
 
-    # ---------------- LOOP ----------------
+    import asyncio
+
     while multiplier < crash_point:
 
-        await asyncio.sleep(0.7)
+        await asyncio.sleep(1)
 
-        multiplier += round(random.uniform(0.05, 0.30), 2)
+        multiplier += round(random.uniform(0.05, 0.25), 2)
 
-        embed.description = f"Multiplier: {multiplier:.2f}x\nUlog: {bet}€"
+        embed.description = f"Multiplier: **{multiplier:.2f}x**\nUlog: {bet}€"
 
         await msg.edit(embed=embed)
 
         if cashed_out:
-            break
+            return
 
-    # 💥 CRASH END
-    embed = discord.Embed(
-        title="💥 CRASH",
-        description=f"Puklo na {crash_point:.2f}x",
-        color=0xe74c3c
-    )
+    crashed = True
 
     if not cashed_out:
-        embed.add_field(
-            name="📉 Izgubljeno",
-            value=f"{bet}€",
-            inline=False
+
+        embed = discord.Embed(
+            title="💥 CRASH",
+            description=f"Puklo na **{crash_point:.2f}x**\n❌ Izgubio si {bet}€",
+            color=discord.Color.red()
         )
 
-    await msg.edit(embed=embed, view=None)
+        await msg.edit(embed=embed, view=None)
 # ---------------- RUN ----------------
 
 
