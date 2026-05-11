@@ -2136,7 +2136,6 @@ async def hilo(ctx, bet: int):
         reference=ctx.message
     )
 
-#--------------------dice----------------
 # ---------------- DICE ----------------
 @bot.command()
 async def dice(ctx, bet: int, choice: str):
@@ -2145,7 +2144,7 @@ async def dice(ctx, bet: int, choice: str):
     user = users.find_one({"_id": user_id})
 
     if not user:
-        return await ctx.reply("❌ Moraš prvo !prijava")
+        return await ctx.reply("❌ Moraš prvo otvoriti račun sa `!prijava`")
 
     cash = user.get("cash", 0)
 
@@ -2160,10 +2159,34 @@ async def dice(ctx, bet: int, choice: str):
 
     choice = choice.lower()
 
+    # ---------- POGREŠNO KORIŠTENJE ----------
     if choice not in ["high", "low"]:
-        return await ctx.reply(
-            "❌ Koristi:\n`!dice 100 high`\n`!dice 100 low`"
+
+        embed = discord.Embed(
+            title="❌ Pogrešno korištenje komande",
+            description=(
+                "🎲 **Primjeri korištenja:**\n\n"
+                "`!dice 100 high`\n"
+                "`!dice 100 low`"
+            ),
+            color=0xe74c3c
         )
+
+        embed.add_field(
+            name="📈 HIGH",
+            value="Broj preko **50**",
+            inline=True
+        )
+
+        embed.add_field(
+            name="📉 LOW",
+            value="Broj ispod **50**",
+            inline=True
+        )
+
+        embed.set_footer(text="🎰 Dice Casino")
+
+        return await ctx.reply(embed=embed)
 
     # ---------- FORMAT ----------
     def format_money(amount):
@@ -2212,6 +2235,12 @@ async def dice(ctx, bet: int, choice: str):
             inline=True
         )
 
+        embed.add_field(
+            name="🎯 Rezultat",
+            value="✅ **POBJEDA**",
+            inline=True
+        )
+
     # ---------- LOSS ----------
     else:
 
@@ -2223,6 +2252,12 @@ async def dice(ctx, bet: int, choice: str):
                 f"💸 **Izgubljeno:** **{format_money(bet)}**"
             ),
             color=0xe74c3c
+        )
+
+        embed.add_field(
+            name="📉 Rezultat",
+            value="❌ **PORAZ**",
+            inline=True
         )
 
     embed.set_footer(text=f"Igrač: {ctx.author.name}")
