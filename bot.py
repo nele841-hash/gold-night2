@@ -2135,6 +2135,102 @@ async def hilo(ctx, bet: int):
         view=view,
         reference=ctx.message
     )
+
+#--------------------dice----------------
+# ---------------- DICE ----------------
+@bot.command()
+async def dice(ctx, bet: int, choice: str):
+
+    user_id = str(ctx.author.id)
+    user = users.find_one({"_id": user_id})
+
+    if not user:
+        return await ctx.reply("❌ Moraš prvo !prijava")
+
+    cash = user.get("cash", 0)
+
+    if bet <= 0:
+        return await ctx.reply("❌ Neispravan ulog.")
+
+    if bet > 50000:
+        return await ctx.reply("❌ Maksimalan ulog je 50.000€")
+
+    if cash < bet:
+        return await ctx.reply("❌ Nemaš dovoljno novca.")
+
+    choice = choice.lower()
+
+    if choice not in ["high", "low"]:
+        return await ctx.reply(
+            "❌ Koristi:\n`!dice 100 high`\n`!dice 100 low`"
+        )
+
+    # ---------- FORMAT ----------
+    def format_money(amount):
+        return f"{amount:,}".replace(",", ".") + "€"
+
+    # ---------- UZMI ULOG ----------
+    users.update_one(
+        {"_id": user_id},
+        {"$inc": {"cash": -bet}}
+    )
+
+    # ---------- RANDOM ----------
+    rolled = random.randint(1, 100)
+
+    win = False
+
+    if choice == "high" and rolled > 50:
+        win = True
+
+    elif choice == "low" and rolled < 50:
+        win = True
+
+    # ---------- WIN ----------
+    if win:
+
+        payout = int(bet * 1.8)
+
+        users.update_one(
+            {"_id": user_id},
+            {"$inc": {"cash": payout}}
+        )
+
+        embed = discord.Embed(
+            title="🎲 DICE WIN",
+            description=(
+                f"🎯 **Tvoj izbor:** **{choice.upper()}**\n"
+                f"🎲 **Pao broj:** **{rolled}**\n\n"
+                f"💰 **Dobitak:** **{format_money(payout)}**"
+            ),
+            color=0x2ecc71
+        )
+
+        embed.add_field(
+            name="🔥 Isplata",
+            value="**1.8x**",
+            inline=True
+        )
+
+    # ---------- LOSS ----------
+    else:
+
+        embed = discord.Embed(
+            title="💥 DICE LOSS",
+            description=(
+                f"🎯 **Tvoj izbor:** **{choice.upper()}**\n"
+                f"🎲 **Pao broj:** **{rolled}**\n\n"
+                f"💸 **Izgubljeno:** **{format_money(bet)}**"
+            ),
+            color=0xe74c3c
+        )
+
+    embed.set_footer(text=f"Igrač: {ctx.author.name}")
+
+    await ctx.send(
+        embed=embed,
+        reference=ctx.message
+    )
 # ---------------- RUN ----------------
 
 
