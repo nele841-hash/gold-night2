@@ -1894,7 +1894,7 @@ async def crash(ctx, bet: int):
     msg = await ctx.reply(
         embed=discord.Embed(
             title="🚀 CRASH GAME",
-            description=f"📊 **Multi:** 1.00x\n💸 Ulog: `{bet:,}€`".replace(",", "."),
+            description=f"📊 **Multi: 1.00x\n**💸 Ulog: `{bet:,}€`".replace(",", "."),
             color=discord.Color.orange()
         ),
         view=view
@@ -2184,7 +2184,7 @@ async def dice(ctx, bet: int, choice: str):
             inline=True
         )
 
-        embed.set_footer(text="🎰 Dice Casino")
+        embed.set_footer(text="GOLD KAZINO")
 
         return await ctx.reply(embed=embed)
 
@@ -2235,11 +2235,6 @@ async def dice(ctx, bet: int, choice: str):
             inline=True
         )
 
-        embed.add_field(
-            name="🎯 Rezultat",
-            value="✅ **POBJEDA**",
-            inline=True
-        )
 
     # ---------- LOSS ----------
     else:
@@ -2252,12 +2247,6 @@ async def dice(ctx, bet: int, choice: str):
                 f"💸 **Izgubljeno:** **{format_money(bet)}**"
             ),
             color=0xe74c3c
-        )
-
-        embed.add_field(
-            name="📉 Rezultat",
-            value="❌ **PORAZ**",
-            inline=True
         )
 
     embed.set_footer(text=f"Igrač: {ctx.author.name}")
