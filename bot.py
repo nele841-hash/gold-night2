@@ -1894,7 +1894,7 @@ async def crash(ctx, bet: int):
     msg = await ctx.reply(
         embed=discord.Embed(
             title="🚀 CRASH GAME",
-            description=f"📊 **Multi: 1.00x\n**💸 Ulog: `{bet:,}€`".replace(",", "."),
+            description=f"**Multi:** `1.00x\n` **💸 Ulog:** `{bet:,}€`".replace(",", "."),
             color=discord.Color.orange()
         ),
         view=view
@@ -1913,7 +1913,7 @@ async def crash(ctx, bet: int):
 
         embed = discord.Embed(
             title="🚀 CRASH GAME",
-            description=f"**Multi: {multiplier:.2f}x\n**💸 Ulog: `{bet:,}€`".replace(",", "."),
+            description=f"**Multi:** `{multiplier:.2f}x\n` **💸 Ulog:** `{bet:,}€`".replace(",", "."),
             color=discord.Color.orange()
         )
 
