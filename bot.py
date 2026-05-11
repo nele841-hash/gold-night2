@@ -1822,7 +1822,7 @@ async def crash(ctx, bet: int):
 
     users.update_one({"_id": user_id}, {"$inc": {"cash": -bet}})
 
-    crash_point = round(random.uniform(1.01, 6.50), 2)
+    crash_point = round(random.uniform(1.01, 100), 2)
     multiplier = 1.00
 
     cashed_out = False
