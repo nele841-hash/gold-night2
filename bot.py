@@ -1966,102 +1966,175 @@ async def hilo(ctx, bet: int):
     current = random.randint(1, 13)
     next_card = random.randint(1, 13)
 
-    def format_money(x):
-        return f"{x:,}€".replace(",", ".")
+    # ---------- FORMAT ----------
+    def format_money(amount):
+        return f"{amount:,}".replace(",", ".") + "€"
 
-    def make_embed(title, desc, color):
-        embed = discord.Embed(title=title, description=desc, color=color)
-        embed.set_footer(text="🎲 HiLo Casino")
-        return embed
+    # ---------- START EMBED ----------
+    start_embed = discord.Embed(
+        title="🎲 HILO CASINO",
+        description=(
+            f"🎯 **Trenutni broj:** `{current}`\n"
+            f"💵 **Ulog:** **{format_money(bet)}**\n\n"
+            f"⬆ Klikni **VEĆE** ako misliš da će sljedeći broj biti veći.\n"
+            f"⬇ Klikni **MANJE** ako misliš da će biti manji."
+        ),
+        color=0xf1c40f
+    )
 
+    start_embed.add_field(
+        name="💰 Mogući dobitak",
+        value=f"**{format_money(int(bet * 1.5))}**",
+        inline=True
+    )
+
+    start_embed.add_field(
+        name="🔥 Isplata",
+        value="**1.5x**",
+        inline=True
+    )
+
+    start_embed.set_footer(text=f"Igrač: {ctx.author.name}")
+
+    # ---------- BUTTON VEĆE ----------
     class Higher(discord.ui.Button):
         def __init__(self):
-            super().__init__(label="⬆ VEĆE", style=discord.ButtonStyle.green)
+            super().__init__(
+                label="⬆ VEĆE",
+                style=discord.ButtonStyle.green
+            )
 
         async def callback(self, interaction: discord.Interaction):
 
             if interaction.user.id != ctx.author.id:
                 return await interaction.response.send_message(
-                    "❌ Ovo nije tvoja igra.", ephemeral=True
+                    "❌ Ovo nije tvoja igra.",
+                    ephemeral=True
                 )
 
             win = next_card > current
 
             if win:
+
                 payout = int(bet * 1.5)
-                users.update_one({"_id": user_id}, {"$inc": {"cash": payout}})
 
-                embed = make_embed(
-                    "📈 HiLo WIN",
-                    f"✔ **Pogodio si!**\n\n"
-                    f"Broj: `{current}` → `{next_card}`\n\n"
-                    f"💰 **Dobitak: {format_money(payout)}**",
-                    0x2ecc71
+                users.update_one(
+                    {"_id": user_id},
+                    {"$inc": {"cash": payout}}
                 )
+
+                embed = discord.Embed(
+                    title="📈 HILO WIN",
+                    description=(
+                        f"🎉 **Pogodio si!**\n\n"
+                        f"🎯 Brojevi:\n"
+                        f"`{current}` ➜ `{next_card}`\n\n"
+                        f"💰 **Dobitak:** **{format_money(payout)}**"
+                    ),
+                    color=0x2ecc71
+                )
+
+                embed.add_field(
+                    name="🔥 Isplata",
+                    value="**1.5x**",
+                    inline=True
+                )
+
             else:
-                embed = make_embed(
-                    "📉 HiLo LOSS",
-                    f"❌ **Izgubio si!**\n\n"
-                    f"Broj: `{current}` → `{next_card}`\n\n"
-                    f"💸 **Gubitak: {format_money(bet)}",
-                    0xe74c3c
+
+                embed = discord.Embed(
+                    title="📉 HILO LOSS",
+                    description=(
+                        f"💥 **Izgubio si!**\n\n"
+                        f"🎯 Brojevi:\n"
+                        f"`{current}` ➜ `{next_card}`\n\n"
+                        f"💸 **Izgubljeno:** **{format_money(bet)}**"
+                    ),
+                    color=0xe74c3c
                 )
 
-            await interaction.response.edit_message(embed=embed, view=None)
+            embed.set_footer(text=f"Igrač: {ctx.author.name}")
 
+            await interaction.response.edit_message(
+                embed=embed,
+                view=None
+            )
 
+    # ---------- BUTTON MANJE ----------
     class Lower(discord.ui.Button):
         def __init__(self):
-            super().__init__(label="⬇ MANJE", style=discord.ButtonStyle.red)
+            super().__init__(
+                label="⬇ MANJE",
+                style=discord.ButtonStyle.red
+            )
 
         async def callback(self, interaction: discord.Interaction):
 
             if interaction.user.id != ctx.author.id:
                 return await interaction.response.send_message(
-                    "❌ Ovo nije tvoja igra.", ephemeral=True
+                    "❌ Ovo nije tvoja igra.",
+                    ephemeral=True
                 )
 
             win = next_card < current
 
             if win:
+
                 payout = int(bet * 1.5)
-                users.update_one({"_id": user_id}, {"$inc": {"cash": payout}})
 
-                embed = make_embed(
-                    "📈 HiLo WIN",
-                    f"✔ **Pogodio si!**\n\n"
-                    f"Broj: `{current}` → `{next_card}`\n\n"
-                    f"💰 **Dobitak: {format_money(payout)}**",
-                    0x2ecc71
+                users.update_one(
+                    {"_id": user_id},
+                    {"$inc": {"cash": payout}}
                 )
+
+                embed = discord.Embed(
+                    title="📈 HILO WIN",
+                    description=(
+                        f"🎉 **Pogodio si!**\n\n"
+                        f"🎯 Brojevi:\n"
+                        f"`{current}` ➜ `{next_card}`\n\n"
+                        f"💰 **Dobitak:** **{format_money(payout)}**"
+                    ),
+                    color=0x2ecc71
+                )
+
+                embed.add_field(
+                    name="🔥 Isplata",
+                    value="**1.5x**",
+                    inline=True
+                )
+
             else:
-                embed = make_embed(
-                    "📉 HiLo LOSS",
-                    f"❌ **Izgubio si!**\n\n"
-                    f"Broj: `{current}` → `{next_card}`\n\n"
-                    f"💸 Gubitak: **{format_money(bet)}**",
-                    0xe74c3c
+
+                embed = discord.Embed(
+                    title="📉 HILO LOSS",
+                    description=(
+                        f"💥 **Izgubio si!**\n\n"
+                        f"🎯 Brojevi:\n"
+                        f"`{current}` ➜ `{next_card}`\n\n"
+                        f"💸 **Izgubljeno:** **{format_money(bet)}**"
+                    ),
+                    color=0xe74c3c
                 )
 
-            await interaction.response.edit_message(embed=embed, view=None)
+            embed.set_footer(text=f"Igrač: {ctx.author.name}")
 
+            await interaction.response.edit_message(
+                embed=embed,
+                view=None
+            )
 
-    view = discord.ui.View()
+    # ---------- VIEW ----------
+    view = discord.ui.View(timeout=30)
+
     view.add_item(Higher())
     view.add_item(Lower())
 
-    embed = discord.Embed(
-        title="🎲 HiLo Casino",
-        description=(
-            f"📊 Trenutni broj: **{current}**\n"
-            f"💵 Ulog: **{format_money(bet)}**\n\n"
-            f"👉 Izaberi: VEĆE ili MANJE"
-        ),
-        color=0xf1c40f
+    await ctx.send(
+        embed=start_embed,
+        view=view,
+        reference=ctx.message
     )
-
-    embed.set_footer(text="🎰 Sretno!")
-    await ctx.send(embed=embed, view=view, reference=ctx.message)
 # ---------------- RUN ----------------
 
 
