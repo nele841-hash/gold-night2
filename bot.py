@@ -1814,8 +1814,8 @@ async def crash(ctx, bet: int):
     if bet <= 0:
         return await ctx.reply("❌ Neispravan ulog.", mention_author=False)
 
-    if bet > 50000:
-        return await ctx.reply("❌ Maksimalan ulog je 50.000€", mention_author=False)
+    if bet > 100000:
+        return await ctx.reply("❌ Maksimalan ulog je 100.000€", mention_author=False)
 
     if cash < bet:
         return await ctx.reply("❌ Nemaš dovoljno novca.", mention_author=False)
