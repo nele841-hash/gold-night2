@@ -2263,196 +2263,165 @@ async def dice(ctx, bet: int, choice: str):
 async def srecka(ctx):
 
     user_id = str(ctx.author.id)
+
     user = users.find_one({"_id": user_id})
 
     if not user:
-        return await ctx.reply("❌ Moraš prvo !prijava")
+        return await ctx.reply("❌ Moraš prvo napraviti profil sa `!prijava`")
 
-    cash = user.get("cash", 0)
+    CIJENA = 1000
 
-    TICKET_PRICE = 1000
+    if user.get("cash", 0) < CIJENA:
+        return await ctx.reply(f"❌ Nemaš dovoljno novca. Potrebno: **{format_number(CIJENA)}€**")
 
-    if cash < TICKET_PRICE:
-        return await ctx.reply("❌ Nemaš dovoljno novca.")
-
-    # ---------- FORMAT ----------
-    def format_money(amount):
-        return f"{amount:,}".replace(",", ".") + "€"
-
-    # ---------- ODUZMI NOVAC ----------
+    # skini novac
     users.update_one(
         {"_id": user_id},
-        {"$inc": {"cash": -TICKET_PRICE}}
+        {"$inc": {"cash": -CIJENA}}
     )
 
-    # ---------- SIMBOLI ----------
+    # simboli
     symbols = [
         ("💎", 40000),
         ("👑", 15000),
         ("💰", 10000),
-        ("💵", 5000),
-        ("🍀", 2500),
-        ("🍒", 1000)
+        ("🍀", 5000),
+        ("🍒", 2500),
+        ("💵", 7500),
+        ("⭐", 3000)
     ]
 
-    # ---------- RANDOM GRID ----------
-    grid = []
+    # ---------------- GENERISANJE TABLE ----------------
+    # maksimalno 2 ista simbola
+    board = []
 
-    weighted = (
-        ["💎"] * 1 +
-        ["👑"] * 2 +
-        ["💰"] * 4 +
-        ["💵"] * 8 +
-        ["🍀"] * 12 +
-        ["🍒"] * 20
-    )
+    while len(board) < 9:
 
-    payouts = {
-        "💎": 40000,
-        "👑": 15000,
-        "💰": 10000,
-        "💵": 5000,
-        "🍀": 2500,
-        "🍒": 1000
-    }
+        symbol = random.choice(symbols)
 
-    for _ in range(9):
-        grid.append(random.choice(weighted))
+        current_count = sum(1 for s in board if s[0] == symbol[0])
+
+        # ne dozvoli 3 ista simbola
+        if current_count >= 2:
+            continue
+
+        board.append(symbol)
+
+    random.shuffle(board)
 
     revealed = [False] * 9
 
-    # ---------- VIEW ----------
-    class ScratchView(discord.ui.View):
+    # ---------------- EMBED ----------------
+    embed = discord.Embed(
+        title="🎟️ Srećka",
+        description=(
+            f"💸 Cijena srećke: **{format_number(CIJENA)}€**\n\n"
+            "🎯 Ogrebi sva polja klikom na dugmad.\n"
+            "Pronađi **3 ista simbola** za dobitak!\n\n"
+            "**💰 Dobici:**\n"
+            "💎 = **40.000€**\n"
+            "👑 = **15.000€**\n"
+            "💰 = **10.000€**\n"
+            "💵 = **7.500€**\n"
+            "🍀 = **5.000€**\n"
+            "⭐ = **3.000€**\n"
+            "🍒 = **2.500€**"
+        ),
+        color=0xf1c40f
+    )
+
+    embed.set_footer(text=f"Igra: {ctx.author}")
+
+    # ---------------- VIEW ----------------
+    class ScratchView(View):
 
         def __init__(self):
             super().__init__(timeout=60)
 
             for i in range(9):
-                self.add_item(ScratchButton(i))
 
-        async def finish_game(self):
-
-            if all(revealed):
-
-                counts = Counter(grid)
-
-                won = False
-                payout = 0
-                winner_symbol = None
-
-                for symbol, amount in counts.items():
-
-                    if amount >= 3:
-
-                        won = True
-                        winner_symbol = symbol
-                        payout = payouts[symbol]
-                        break
-
-                # ---------- WIN ----------
-                if won:
-
-                    users.update_one(
-                        {"_id": user_id},
-                        {"$inc": {"cash": payout}}
-                    )
-
-                    embed = discord.Embed(
-                        title="🎟️ SREĆKA WIN",
-                        description=(
-                            f"🎉 Dobili ste 3 ista simbola!\n\n"
-                            f"🏆 Simbol: **{winner_symbol}**\n"
-                            f"💰 Dobitak: **{format_money(payout)}**"
-                        ),
-                        color=0x2ecc71
-                    )
-
-                # ---------- LOSS ----------
-                else:
-
-                    embed = discord.Embed(
-                        title="💥 SREĆKA LOSS",
-                        description=(
-                            f"❌ Niste dobili 3 ista simbola.\n\n"
-                            f"💸 Izgubljeno: **{format_money(TICKET_PRICE)}**"
-                        ),
-                        color=0xe74c3c
-                    )
-
-                for item in self.children:
-                    item.disabled = True
-
-                await msg.edit(embed=embed, view=self)
-
-    # ---------- BUTTON ----------
-    class ScratchButton(discord.ui.Button):
-
-        def __init__(self, index):
-            super().__init__(
-                label="?",
-                style=discord.ButtonStyle.secondary,
-                row=index // 3
-            )
-
-            self.index = index
-
-        async def callback(self, interaction: discord.Interaction):
-
-            if interaction.user.id != ctx.author.id:
-                return await interaction.response.send_message(
-                    "❌ Ovo nije tvoja srećka.",
-                    ephemeral=True
+                button = Button(
+                    label="❔",
+                    style=discord.ButtonStyle.secondary,
+                    row=i // 3
                 )
 
-            if revealed[self.index]:
-                return
+                async def callback(interaction: discord.Interaction, index=i):
 
-            revealed[self.index] = True
+                    if interaction.user.id != ctx.author.id:
+                        return await interaction.response.send_message(
+                            "❌ Ovo nije tvoja srećka.",
+                            ephemeral=True
+                        )
 
-            emoji = grid[self.index]
+                    if revealed[index]:
+                        return
 
-            self.label = emoji
-            self.disabled = True
-            self.style = discord.ButtonStyle.primary
+                    revealed[index] = True
 
-            await interaction.response.edit_message(view=view)
+                    sym = board[index][0]
 
-            await view.finish_game()
+                    self.children[index].label = sym
+                    self.children[index].disabled = True
 
-    # ---------- EMBED ----------
-    embed = discord.Embed(
-        title="🎟️ Srećka",
-        description=(
-            "Oguli sva polja klikom na dugmad.\n"
-            "Cilj je pronaći **3 ista simbola** za dobitak!"
-        ),
-        color=0xf1c40f
-    )
+                    # kada su sva polja otvorena
+                    if all(revealed):
 
-    embed.add_field(
-        name="💎 Mogući Dobici",
-        value=(
-            "💎 = **40.000€**\n"
-            "👑 = **15.000€**\n"
-            "💰 = **10.000€**\n"
-            "💵 = **5.000€**\n"
-            "🍀 = **2.500€**\n"
-            "🍒 = **1.000€**"
-        ),
-        inline=False
-    )
+                        counts = Counter([s[0] for s in board])
 
-    embed.set_footer(
-        text=f"Cijena srećke: {format_money(TICKET_PRICE)}"
-    )
+                        win_symbol = None
 
-    view = ScratchView()
+                        for symb, count in counts.items():
+                            if count >= 3:
+                                win_symbol = symb
+                                break
 
-    msg = await ctx.send(
-        embed=embed,
-        view=view,
-        reference=ctx.message
-    )
+                        if win_symbol:
+
+                            reward = 0
+
+                            for s in symbols:
+                                if s[0] == win_symbol:
+                                    reward = s[1]
+
+                            users.update_one(
+                                {"_id": user_id},
+                                {"$inc": {"cash": reward}}
+                            )
+
+                            result_embed = discord.Embed(
+                                title="🎉 Dobitna srećka!",
+                                description=(
+                                    f"✨ Pogodio si simbol {win_symbol}\n\n"
+                                    f"💰 Dobitak: **{format_number(reward)}€**"
+                                ),
+                                color=0x2ecc71
+                            )
+
+                        else:
+
+                            result_embed = discord.Embed(
+                                title="❌ Nema dobitka",
+                                description=(
+                                    f"💸 Izgubljeno: **{format_number(CIJENA)}€**"
+                                ),
+                                color=0xe74c3c
+                            )
+
+                        return await interaction.response.edit_message(
+                            embed=result_embed,
+                            view=self
+                        )
+
+                    await interaction.response.edit_message(
+                        embed=embed,
+                        view=self
+                    )
+
+                button.callback = callback
+                self.add_item(button)
+
+    await ctx.reply(embed=embed, view=ScratchView())
 # ---------------- RUN ----------------
 
 
