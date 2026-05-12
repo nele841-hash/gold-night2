@@ -2272,53 +2272,92 @@ async def srecka(ctx):
     CIJENA = 1000
 
     if user.get("cash", 0) < CIJENA:
-        return await ctx.reply(f"❌ Nemaš dovoljno novca. Potrebno: **{format_number(CIJENA)}€**")
+        return await ctx.reply(
+            f"❌ Nemaš dovoljno novca. Potrebno: **{format_number(CIJENA)}€**"
+        )
 
-    # skini novac
+    # ---------- SKINI NOVAC ----------
     users.update_one(
         {"_id": user_id},
         {"$inc": {"cash": -CIJENA}}
     )
 
-    # simboli
-    symbols = [
-        ("💎", 40000),
-        ("👑", 15000),
-        ("💰", 10000),
-        ("🍀", 5000),
-        ("🍒", 2500),
-        ("💵", 7500),
-        ("⭐", 3000)
-    ]
+    # ---------- FORMAT ----------
+    def format_money(amount):
+        return f"{amount:,}".replace(",", ".") + "€"
 
-    # ---------------- GENERISANJE TABLE ----------------
-    # maksimalno 2 ista simbola
-    board = []
+    # ---------- SIMBOLI ----------
+    payouts = {
+        "💎": 40000,
+        "👑": 15000,
+        "💰": 10000,
+        "💵": 7500,
+        "🍀": 5000,
+        "⭐": 3000,
+        "🍒": 2500
+    }
 
-    while len(board) < 9:
+    all_symbols = list(payouts.keys())
 
-        symbol = random.choice(symbols)
+    # ---------- PRAVLJENJE TABLE ----------
+    grid = []
 
-        current_count = sum(1 for s in board if s[0] == symbol[0])
+    # 35% šansa za win
+    is_win = random.randint(1, 100) <= 35
 
-        # ne dozvoli 3 ista simbola
-        if current_count >= 2:
-            continue
+    if is_win:
 
-        board.append(symbol)
+        weighted = (
+            ["💎"] * 1 +
+            ["👑"] * 2 +
+            ["💰"] * 4 +
+            ["💵"] * 6 +
+            ["🍀"] * 10 +
+            ["⭐"] * 14 +
+            ["🍒"] * 18
+        )
 
-    random.shuffle(board)
+        win_symbol = random.choice(weighted)
+
+        # tačno 3 ista
+        grid = [win_symbol] * 3
+
+        others = [s for s in all_symbols if s != win_symbol]
+
+        while len(grid) < 9:
+
+            symbol = random.choice(others)
+
+            if grid.count(symbol) < 2:
+                grid.append(symbol)
+
+    else:
+
+        while len(grid) < 9:
+
+            symbol = random.choice(all_symbols)
+
+            if grid.count(symbol) < 2:
+                grid.append(symbol)
+
+    random.shuffle(grid)
 
     revealed = [False] * 9
 
-    # ---------------- EMBED ----------------
+    # ---------- EMBED ----------
     embed = discord.Embed(
         title="🎟️ Srećka",
         description=(
-            f"💸 Cijena srećke: **{format_number(CIJENA)}€**\n\n"
+            f"💸 Cijena srećke: **{format_money(CIJENA)}**\n\n"
             "🎯 Ogrebi sva polja klikom na dugmad.\n"
-            "Pronađi **3 ista simbola** za dobitak!\n\n"
-            "**💰 Dobici:**\n"
+            "Pronađi **3 ista simbola** za dobitak!"
+        ),
+        color=0xf1c40f
+    )
+
+    embed.add_field(
+        name="💰 Dobici",
+        value=(
             "💎 = **40.000€**\n"
             "👑 = **15.000€**\n"
             "💰 = **10.000€**\n"
@@ -2327,12 +2366,12 @@ async def srecka(ctx):
             "⭐ = **3.000€**\n"
             "🍒 = **2.500€**"
         ),
-        color=0xf1c40f
+        inline=False
     )
 
-    embed.set_footer(text=f"Igra: {ctx.author}")
+    embed.set_footer(text=f"Igrač: {ctx.author}")
 
-    # ---------------- VIEW ----------------
+    # ---------- VIEW ----------
     class ScratchView(View):
 
         def __init__(self):
@@ -2359,30 +2398,27 @@ async def srecka(ctx):
 
                     revealed[index] = True
 
-                    sym = board[index][0]
-
-                    self.children[index].label = sym
+                    self.children[index].label = grid[index]
                     self.children[index].disabled = True
+                    self.children[index].style = discord.ButtonStyle.primary
 
-                    # kada su sva polja otvorena
+                    # kada su sva otvorena
                     if all(revealed):
 
-                        counts = Counter([s[0] for s in board])
+                        counts = Counter(grid)
 
                         win_symbol = None
 
                         for symb, count in counts.items():
+
                             if count >= 3:
                                 win_symbol = symb
                                 break
 
+                        # ---------- WIN ----------
                         if win_symbol:
 
-                            reward = 0
-
-                            for s in symbols:
-                                if s[0] == win_symbol:
-                                    reward = s[1]
+                            reward = payouts[win_symbol]
 
                             users.update_one(
                                 {"_id": user_id},
@@ -2390,20 +2426,21 @@ async def srecka(ctx):
                             )
 
                             result_embed = discord.Embed(
-                                title="🎉 Dobitna srećka!",
+                                title="🎉 DOBITNA SREĆKA",
                                 description=(
-                                    f"✨ Pogodio si simbol {win_symbol}\n\n"
-                                    f"💰 Dobitak: **{format_number(reward)}€**"
+                                    f"✨ Pogodili ste simbol **{win_symbol}**\n\n"
+                                    f"💰 Dobitak: **{format_money(reward)}**"
                                 ),
                                 color=0x2ecc71
                             )
 
+                        # ---------- LOSS ----------
                         else:
 
                             result_embed = discord.Embed(
-                                title="❌ Nema dobitka",
+                                title="💥 NEMA DOBITKA",
                                 description=(
-                                    f"💸 Izgubljeno: **{format_number(CIJENA)}€**"
+                                    f"💸 Izgubljeno: **{format_money(CIJENA)}**"
                                 ),
                                 color=0xe74c3c
                             )
