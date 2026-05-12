@@ -5,6 +5,8 @@ import random
 import os
 from pymongo import MongoClient
 from discord.ui import Button, View
+import asyncio
+from collections import Counter
 
 
 EMOJIS = {
@@ -2253,6 +2255,190 @@ async def dice(ctx, bet: int, choice: str):
 
     await ctx.send(
         embed=embed,
+        reference=ctx.message
+    )
+
+# ---------------- SREĆKA ----------------
+@bot.command()
+async def srecka(ctx, bet: int):
+
+    user_id = str(ctx.author.id)
+    user = users.find_one({"_id": user_id})
+
+    if not user:
+        return await ctx.reply("❌ Moraš prvo !prijava")
+
+    cash = user.get("cash", 0)
+
+    if bet <= 0:
+        return await ctx.reply("❌ Neispravan ulog.")
+
+    if bet > 50000:
+        return await ctx.reply("❌ Maksimalan ulog je 50.000€")
+
+    if cash < bet:
+        return await ctx.reply("❌ Nemaš dovoljno novca.")
+
+    # ---------- FORMAT ----------
+    def format_money(amount):
+        return f"{amount:,}".replace(",", ".") + "€"
+
+    # ---------- ODUZMI ULOG ----------
+    users.update_one(
+        {"_id": user_id},
+        {"$inc": {"cash": -bet}}
+    )
+
+    symbols = [
+        ("💎", 50),
+        ("💰", 15),
+        ("💵", 8),
+        ("🍀", 4),
+        ("🍒", 2)
+    ]
+
+    grid = []
+
+    for _ in range(9):
+        symbol = random.choice(symbols)
+        grid.append(symbol)
+
+    revealed = [False] * 9
+
+    # ---------- VIEW ----------
+    class ScratchView(discord.ui.View):
+
+        def __init__(self):
+            super().__init__(timeout=60)
+
+            for i in range(9):
+                self.add_item(ScratchButton(i))
+
+        async def check_finished(self):
+
+            if all(revealed):
+
+                emojis = [x[0] for x in grid]
+
+                counts = Counter(emojis)
+
+                won = False
+                payout = 0
+                winner_symbol = None
+
+                for emoji, amount in counts.items():
+
+                    if amount >= 3:
+
+                        won = True
+                        winner_symbol = emoji
+
+                        for sym, multi in symbols:
+                            if sym == emoji:
+                                payout = int(bet * multi)
+                                break
+
+                        break
+
+                # ---------- WIN ----------
+                if won:
+
+                    users.update_one(
+                        {"_id": user_id},
+                        {"$inc": {"cash": payout}}
+                    )
+
+                    embed = discord.Embed(
+                        title="🎟️ SREĆKA WIN",
+                        description=(
+                            f"🎉 Dobili ste 3 ista simbola!\n\n"
+                            f"🏆 Simbol: **{winner_symbol}**\n"
+                            f"💰 Dobitak: **{format_money(payout)}**"
+                        ),
+                        color=0x2ecc71
+                    )
+
+                # ---------- LOSS ----------
+                else:
+
+                    embed = discord.Embed(
+                        title="💥 SREĆKA LOSS",
+                        description=(
+                            f"❌ Niste dobili 3 ista simbola.\n\n"
+                            f"💸 Izgubljeno: **{format_money(bet)}**"
+                        ),
+                        color=0xe74c3c
+                    )
+
+                for item in self.children:
+                    item.disabled = True
+
+                await msg.edit(embed=embed, view=self)
+
+    # ---------- BUTTON ----------
+    class ScratchButton(discord.ui.Button):
+
+        def __init__(self, index):
+            super().__init__(
+                label="?",
+                style=discord.ButtonStyle.secondary,
+                row=index // 3
+            )
+
+            self.index = index
+
+        async def callback(self, interaction: discord.Interaction):
+
+            if interaction.user.id != ctx.author.id:
+                return await interaction.response.send_message(
+                    "❌ Ovo nije tvoja igra.",
+                    ephemeral=True
+                )
+
+            if revealed[self.index]:
+                return
+
+            revealed[self.index] = True
+
+            emoji = grid[self.index][0]
+
+            self.label = emoji
+            self.disabled = True
+            self.style = discord.ButtonStyle.primary
+
+            await interaction.response.edit_message(view=view)
+
+            await view.check_finished()
+
+    # ---------- EMBED ----------
+    embed = discord.Embed(
+        title="🎟️ Srećka",
+        description=(
+            "Oguli sva polja klikom na dugmad.\n"
+            "Cilj je pronaći **3 ista simbola** za dobitak!"
+        ),
+        color=0xf1c40f
+    )
+
+    embed.add_field(
+        name="💎 Mogući Dobici",
+        value=(
+            "💎 = 50x\n"
+            "💰 = 15x\n"
+            "💵 = 8x\n"
+            "🍀 = 4x\n"
+            "🍒 = 2x"
+        ),
+        inline=False
+    )
+
+    embed.set_footer(text=f"Ulog: {format_money(bet)}")
+
+    view = ScratchView()
+
+    msg = await ctx.send(
+        embed=embed,
+        view=view,
         reference=ctx.message
     )
 # ---------------- RUN ----------------
