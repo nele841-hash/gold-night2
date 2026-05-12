@@ -2267,24 +2267,33 @@ async def srecka(ctx):
     user = users.find_one({"_id": user_id})
 
     if not user:
-        return await ctx.reply("❌ Moraš prvo napraviti profil sa `!prijava`")
+        error_embed = discord.Embed(
+            description="❌ Moraš prvo napraviti profil sa `!prijava`",
+            color=0xe74c3c
+        )
+        return await ctx.reply(embed=error_embed)
 
     CIJENA = 1000
 
+    # ---------- FORMAT ----------
+    def format_money(amount):
+        return f"{amount:,}".replace(",", ".") + "€"
+
+    # ---------- NEMA PARA ----------
     if user.get("cash", 0) < CIJENA:
-        return await ctx.reply(
-            f"❌ Nemaš dovoljno novca. Potrebno: **{format_number(CIJENA)}€**"
+
+        error_embed = discord.Embed(
+            description=f"❌ Nemaš dovoljno novca za srećku. Potrebno: **{format_money(CIJENA)}**",
+            color=0xe74c3c
         )
+
+        return await ctx.reply(embed=error_embed)
 
     # ---------- SKINI NOVAC ----------
     users.update_one(
         {"_id": user_id},
         {"$inc": {"cash": -CIJENA}}
     )
-
-    # ---------- FORMAT ----------
-    def format_money(amount):
-        return f"{amount:,}".replace(",", ".") + "€"
 
     # ---------- SIMBOLI ----------
     payouts = {
@@ -2402,7 +2411,7 @@ async def srecka(ctx):
                     self.children[index].disabled = True
                     self.children[index].style = discord.ButtonStyle.primary
 
-                    # kada su sva otvorena
+                    # ---------- SVA OTVORENA ----------
                     if all(revealed):
 
                         counts = Counter(grid)
@@ -2458,7 +2467,10 @@ async def srecka(ctx):
                 button.callback = callback
                 self.add_item(button)
 
-    await ctx.reply(embed=embed, view=ScratchView())
+    await ctx.reply(
+        embed=embed,
+        view=ScratchView()
+    )
 # ---------------- RUN ----------------
 
 
