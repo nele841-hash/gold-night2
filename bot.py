@@ -2260,7 +2260,7 @@ async def dice(ctx, bet: int, choice: str):
 
 # ---------------- SREĆKA ----------------
 @bot.command()
-async def srecka(ctx, bet: int):
+async def srecka(ctx):
 
     user_id = str(ctx.author.id)
     user = users.find_one({"_id": user_id})
@@ -2270,38 +2270,54 @@ async def srecka(ctx, bet: int):
 
     cash = user.get("cash", 0)
 
-    if bet <= 0:
-        return await ctx.reply("❌ Neispravan ulog.")
+    TICKET_PRICE = 1000
 
-    if bet > 50000:
-        return await ctx.reply("❌ Maksimalan ulog je 50.000€")
-
-    if cash < bet:
+    if cash < TICKET_PRICE:
         return await ctx.reply("❌ Nemaš dovoljno novca.")
 
     # ---------- FORMAT ----------
     def format_money(amount):
         return f"{amount:,}".replace(",", ".") + "€"
 
-    # ---------- ODUZMI ULOG ----------
+    # ---------- ODUZMI NOVAC ----------
     users.update_one(
         {"_id": user_id},
-        {"$inc": {"cash": -bet}}
+        {"$inc": {"cash": -TICKET_PRICE}}
     )
 
+    # ---------- SIMBOLI ----------
     symbols = [
-        ("💎", 50),
-        ("💰", 15),
-        ("💵", 8),
-        ("🍀", 4),
-        ("🍒", 2)
+        ("💎", 40000),
+        ("👑", 15000),
+        ("💰", 10000),
+        ("💵", 5000),
+        ("🍀", 2500),
+        ("🍒", 1000)
     ]
 
+    # ---------- RANDOM GRID ----------
     grid = []
 
+    weighted = (
+        ["💎"] * 1 +
+        ["👑"] * 2 +
+        ["💰"] * 4 +
+        ["💵"] * 8 +
+        ["🍀"] * 12 +
+        ["🍒"] * 20
+    )
+
+    payouts = {
+        "💎": 40000,
+        "👑": 15000,
+        "💰": 10000,
+        "💵": 5000,
+        "🍀": 2500,
+        "🍒": 1000
+    }
+
     for _ in range(9):
-        symbol = random.choice(symbols)
-        grid.append(symbol)
+        grid.append(random.choice(weighted))
 
     revealed = [False] * 9
 
@@ -2314,30 +2330,23 @@ async def srecka(ctx, bet: int):
             for i in range(9):
                 self.add_item(ScratchButton(i))
 
-        async def check_finished(self):
+        async def finish_game(self):
 
             if all(revealed):
 
-                emojis = [x[0] for x in grid]
-
-                counts = Counter(emojis)
+                counts = Counter(grid)
 
                 won = False
                 payout = 0
                 winner_symbol = None
 
-                for emoji, amount in counts.items():
+                for symbol, amount in counts.items():
 
                     if amount >= 3:
 
                         won = True
-                        winner_symbol = emoji
-
-                        for sym, multi in symbols:
-                            if sym == emoji:
-                                payout = int(bet * multi)
-                                break
-
+                        winner_symbol = symbol
+                        payout = payouts[symbol]
                         break
 
                 # ---------- WIN ----------
@@ -2365,7 +2374,7 @@ async def srecka(ctx, bet: int):
                         title="💥 SREĆKA LOSS",
                         description=(
                             f"❌ Niste dobili 3 ista simbola.\n\n"
-                            f"💸 Izgubljeno: **{format_money(bet)}**"
+                            f"💸 Izgubljeno: **{format_money(TICKET_PRICE)}**"
                         ),
                         color=0xe74c3c
                     )
@@ -2391,7 +2400,7 @@ async def srecka(ctx, bet: int):
 
             if interaction.user.id != ctx.author.id:
                 return await interaction.response.send_message(
-                    "❌ Ovo nije tvoja igra.",
+                    "❌ Ovo nije tvoja srećka.",
                     ephemeral=True
                 )
 
@@ -2400,7 +2409,7 @@ async def srecka(ctx, bet: int):
 
             revealed[self.index] = True
 
-            emoji = grid[self.index][0]
+            emoji = grid[self.index]
 
             self.label = emoji
             self.disabled = True
@@ -2408,7 +2417,7 @@ async def srecka(ctx, bet: int):
 
             await interaction.response.edit_message(view=view)
 
-            await view.check_finished()
+            await view.finish_game()
 
     # ---------- EMBED ----------
     embed = discord.Embed(
@@ -2423,16 +2432,19 @@ async def srecka(ctx, bet: int):
     embed.add_field(
         name="💎 Mogući Dobici",
         value=(
-            "💎 = 50x\n"
-            "💰 = 15x\n"
-            "💵 = 8x\n"
-            "🍀 = 4x\n"
-            "🍒 = 2x"
+            "💎 = **40.000€**\n"
+            "👑 = **15.000€**\n"
+            "💰 = **10.000€**\n"
+            "💵 = **5.000€**\n"
+            "🍀 = **2.500€**\n"
+            "🍒 = **1.000€**"
         ),
         inline=False
     )
 
-    embed.set_footer(text=f"Ulog: {format_money(bet)}")
+    embed.set_footer(
+        text=f"Cijena srećke: {format_money(TICKET_PRICE)}"
+    )
 
     view = ScratchView()
 
